@@ -1,0 +1,295 @@
+.form-control:focus {
+  box-shadow: 0 0 0px 0.5px rgb(12 149 85) !important;
+  border-color: #effff7 !important;
+}
+
+.form-control-lg {
+  min-height: calc(30px + 23px + calc(var(--bs-border-width) * 2));
+  font-size: 15px;
+}
+
+.form-control {
+  border-radius: 5px !important;
+  font-size: 15px;
+}
+
+.form-select {
+  border-radius: 5px !important;
+  font-size: 15px;
+}
+
+.nav-link:focus,
+.nav-link:hover {
+  color: aliceblue;
+  background: #f3f3f3;
+  border-radius: 5px;
+}
+
+/* MAIN CONTENT */
+.main-content {
+  margin-left: 0;
+  transition: margin-left 0.3s ease;
+}
+
+/* SIDEBAR WIDTH = 270px */
+.main-content.sidebar-open {
+  margin-left: 270px;
+}
+
+/* DESKTOP ONLY */
+@media (max-width: 992px) {
+  .main-content.sidebar-open {
+    margin-left: 0;
+  }
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.blue {
+  background-color: blue !important;
+  color: white !important;
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.purple {
+  background-color: purple !important;
+  color: white !important;
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.black {
+  background-color: black !important;
+  color: white !important;
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.green {
+  background-color: green !important;
+  color: white !important;
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.fs-14 {
+  font-size: 14px !important;
+}
+
+.fs-13 {
+  font-size: 13px !important;
+}
+
+.fs-12 {
+  font-size: 12px !important;
+}
+
+.fs-11 {
+  font-size: 11px !important;
+}
+.fs-10 {
+  font-size: 10px !important;
+}
+
+.cursor {
+  cursor: pointer;
+}
+
+.number-pill {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  font-size: 14px;
+  color: #000;
+}
+
+.headcol {
+  left: 0;
+  position: sticky;
+  z-index: 2;
+  border-right: 1px solid #ffffff;
+}
+
+/* Sidebar base */
+.sidebar-menu {
+  padding: 0;
+  margin: 0;
+}
+
+.menu-item {
+  margin-bottom: 4px;
+}
+
+/* Parent button */
+.menu-link {
+  width: 100%;
+  background: none;
+  border: 0;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  cursor: pointer;
+  color: #000;
+}
+
+/* Hover */
+.menu-link:hover {
+  background: #f4f4f4;
+}
+
+/* Arrow */
+.menu-link .arrow {
+  transition: transform 0.3s ease;
+}
+
+/* Rotate arrow on open */
+.menu-link[aria-expanded="true"] .arrow {
+  transform: rotate(180deg);
+}
+
+/* Submenu */
+.submenu {
+  padding-left: 42px;
+}
+
+.submenu li {
+  margin: 4px 0;
+}
+
+.submenu a {
+  display: block;
+  padding: 6px 10px;
+  font-size: 13px;
+  text-decoration: none;
+  color: #555;
+  border-radius: 4px;
+}
+
+.submenu a:hover {
+  background: #f1f1f1;
+  color: #000;
+}
+
+/* Active submenu */
+.submenu a.active {
+  color: #39cf9a;
+  font-weight: 600;
+}
+
+/* BASE MENU */
+.menu-link {
+  position: relative;
+  width: 100%;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  background: transparent;
+  border: 0;
+  text-decoration: none;
+  color: #000;
+  font-size: 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* Hover */
+.menu-link:hover {
+  background: #f4f4f4;
+}
+
+/* ACTIVE STATE */
+.menu-link.active {
+  background: #e8f7f1;
+  font-weight: 600;
+}
+
+/* LEFT ACTIVE INDICATOR */
+.active-indicator {
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 4px;
+  background: #39cf9a;
+  border-radius: 0 4px 4px 0;
+  display: none;
+}
+
+.menu-link.active .active-indicator {
+  display: block;
+}
+
+/* ICON COLOR CHANGE */
+.menu-link.active i {
+  color: #39cf9a;
+}
+
+/* SUBMENU */
+.submenu {
+  padding-left: 42px;
+}
+
+.submenu a {
+  display: block;
+  padding: 6px 8px;
+  font-size: 13px;
+  color: #555;
+  text-decoration: none;
+  border-radius: 4px;
+}
+
+.submenu a.active {
+  color: #009d65;
+  font-weight: 600;
+}
+
+/* ARROW */
+.arrow {
+  transition: transform 0.3s;
+}
+
+.menu-link[aria-expanded="true"] .arrow {
+  transform: rotate(180deg);
+}
+
+.nav-link.active {
+  background-color: #e8f7f1;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+/* qty */
+.count-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 6px 12px;
+  width: 180px;
+  margin-left: 30%;
+}
+
+.count-btn {
+  border: none;
+  background: none;
+  font-size: 1.5rem;
+  color: #20c997;
+  cursor: pointer;
+}
+
+.count-btn:disabled {
+  color: #adb5bd;
+  cursor: not-allowed;
+}
+
+table,
+tr,
+td {
+  padding: 3px 3px !important;
+}
