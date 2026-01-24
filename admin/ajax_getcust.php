@@ -1,10 +1,26 @@
-<?php include("../adminsession.php");
+<?php
+include("../adminsession.php");
 
-$mobile_no = $obj->test_input($_REQUEST['mobile_no']);
+$mobile_no = $obj->test_input($_POST['mobile_no'] ?? '');
 
 if ($mobile_no != '') {
-    $customer_name = $obj->getvalfield("m_customer", "customer_name", "mobile='$mobile_no'");
-    echo $customer_name;
+
+    $row = $obj->executequery("
+        SELECT customer_id, customer_name
+        FROM m_customer
+        WHERE mobile='$mobile_no'
+        LIMIT 1
+    ");
+
+    if (!empty($row)) {
+        echo json_encode([
+            "status" => "found",
+            "customer_id" => $row[0]['customer_id'],
+            "customer_name" => $row[0]['customer_name']
+        ]);
+    } else {
+        echo json_encode(["status" => "not_found"]);
+    }
 } else {
-    echo "not_found";
+    echo json_encode(["status" => "not_found"]);
 }

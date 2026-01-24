@@ -2,6 +2,7 @@
 include_once("../../adminsession.php");
 
 $item_id = (int)($_REQUEST['item_id'] ?? 0);
+$order_id = (int)($_REQUEST['order_id'] ?? 0);
 $data    = $_REQUEST['data'] ?? [];
 $item_type_master_id = (int)($data['item_type_master_id'] ?? 0);
 $qty = max(1, (int)($data['qty'] ?? 1)); // pcs OR kg
@@ -38,7 +39,8 @@ if ($item_id === 2) {
     }
 
     // total = (service + addons) × KG
-    $service_total = ($service_rate + $addon_total) * $qty;
+    $service_total = $service_rate + $addon_total;
+    $total_amount = ($service_rate + $addon_total) * $qty;
 
     $selection = [
         "service" => [
@@ -48,14 +50,14 @@ if ($item_id === 2) {
         "addons" => $addons
     ];
 
-    $obj->insert_record("order_item", [
+    $lastid =  $obj->insert_record_lastid("order_item", [
         "item_id"             => 2,
         "item_type_master_id" => 1,
         "qty"                 => $qty, // KG
         "selection_json"      => json_encode($selection, JSON_UNESCAPED_UNICODE),
         "service_total"       => $service_total,
         "requirement_total"   => 0,
-        "total_amount"        => $service_total,
+        "total_amount"        => $total_amount,
         "is_washing"          => $is_washing,
         "is_pressing"         => $is_pressing,
         "createdby"           => $loginid,
@@ -63,6 +65,8 @@ if ($item_id === 2) {
         "createdate"          => $createdate,
         "sessionid"           => $sessionid
     ]);
+
+    $obj->update_record("order_item_laundry", ["order_id" => $order_id, "createdby" => $loginid, 'order_item_id' => 0], ["order_item_id" => $lastid]);
 
     echo "success";
     exit;

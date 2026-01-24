@@ -1,29 +1,23 @@
-<?php
-include_once("../../adminsession.php");
+<?php include_once("../../adminsession.php");
 
 $mode = $_POST['mode'] ?? 'add';
-$order_item_id = (int)($_POST['order_item_id'] ?? 0);
+$order_item_laundry_id = (int)($_POST['order_item_laundry_id'] ?? 0);
 $item_id = 0;
 $item_type_master_id = 0;
-$qty = 1;
-$is_washing = 0;
-$is_pressing = 0;
+$qty = 0;
 $selection = [];
 
 /* ================= EDIT MODE ================= */
-if ($mode === 'edit' && $order_item_id > 0) {
+if ($mode === 'edit' && $order_item_laundry_id > 0) {
 
-    $order = $obj->select_record("order_item", [
-        "order_item_id" => $order_item_id
+    $order = $obj->select_record("order_item_laundry", [
+        "order_item_laundry_id" => $order_item_laundry_id
     ]);
 
     $item_id = $order['item_id'];
     $item_type_master_id = $order['item_type_master_id'];
     $qty = $order['qty'];
-    $is_washing = $order['is_washing'];
-    $is_pressing = $order['is_pressing'];
-
-    $selection = json_decode($order['selection_json'], true);
+    $comments = json_decode($order['comments'], true);
 }
 /* ================= ADD MODE ================= */ else {
     $item_id = $obj->test_input($_POST['item_id'] ?? '');
@@ -33,14 +27,19 @@ if ($mode === 'edit' && $order_item_id > 0) {
 $item = $obj->select_record("item_master", ["item_id" => $item_id]);
 $item_name = $item['item_name'];
 $item_in = $item['item_in'];
-
-$selectedReqIds = array_column($selection['requirements'] ?? [], 'id');
-$selectedCommentIds = $selection['comments'] ?? [];
+$selectedCommentIds = $comments ?? [];
 ?>
 
-<div class="modal-header">
+<div class="modal-header justify-content-between">
     <h1 class="modal-title fs-5"><?= $item_name; ?></h1>
-    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <a href="#"
+        role="button"
+        aria-label="Close"
+        onclick="this.blur()"
+        data-bs-dismiss="modal">
+        <i class="bi bi-x fs-3 text-black"></i>
+    </a>
+
 </div>
 
 <div class="modal-body">
@@ -117,7 +116,7 @@ $selectedCommentIds = $selection['comments'] ?? [];
         id="addItemBtn1"
         class="btn btn-success w-75"
         onclick="<?= $mode === 'edit'
-                        ? "updateItemDetails($order_item_id)"
+                        ? "handleLaundryUpdate($order_item_laundry_id)"
                         : "saveItemDetailsLaundry($item_id)" ?>">
         <?= $mode === 'edit' ? 'UPDATE' : 'ADD' ?>
     </a>

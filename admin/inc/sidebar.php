@@ -33,19 +33,25 @@
 
                 <li class="menu-item">
 
-                    <button class="menu-link <?= ($pagename == 'item_master.php'|| $pagename == 'item_service.php'|| $pagename == 'item_type_master.php'|| $pagename == 'coupon_master.php' || $pagename == 'requirement_master.php' || $pagename == 'comment_master.php') ? 'active' : ''; ?>"
+                    <button class="menu-link <?= ($pagename == 'company_setting.php' || $pagename == 'item_master.php' || $pagename == 'item_service.php' || $pagename == 'item_type_master.php' || $pagename == 'coupon_master.php' || $pagename == 'requirement_master.php' || $pagename == 'comment_master.php') ? 'active' : ''; ?>"
                         type="button"
                         data-bs-toggle="collapse"
                         data-bs-target="#masterSubmenu"
-                        aria-expanded="<?= ($pagename == 'item_master.php') ? 'true' : 'false'; ?>">
+                        aria-expanded="<?= ($pagename == 'company_setting.php' || $pagename == 'item_master.php') ? 'true' : 'false'; ?>">
 
                         <i class="bi bi-mortarboard-fill me-4 text-secondary"></i>
                         <small class="text-black ms-2">Master</small>
                         <i class="bi bi-chevron-down ms-auto arrow"></i>
                     </button>
 
-                    <ul class="submenu collapse <?= ($pagename == 'item_master.php' || $pagename == 'item_service.php'|| $pagename == 'item_type_master.php'|| $pagename == 'coupon_master.php' || $pagename == 'requirement_master.php' || $pagename == 'comment_master.php') ? 'show' : ''; ?>"
+                    <ul class="submenu collapse <?= ($pagename == 'company_setting.php' || $pagename == 'item_master.php' || $pagename == 'item_service.php' || $pagename == 'item_type_master.php' || $pagename == 'coupon_master.php' || $pagename == 'requirement_master.php' || $pagename == 'comment_master.php') ? 'show' : ''; ?>"
                         id="masterSubmenu">
+                        <li>
+                            <a href="company_setting.php"
+                                class="<?= ($pagename == 'company_setting.php') ? 'active' : ''; ?>">
+                                Company Setting
+                            </a>
+                        </li>
                         <li>
                             <a href="item_master.php"
                                 class="<?= ($pagename == 'item_master.php') ? 'active' : ''; ?>">
@@ -107,8 +113,8 @@
 
             <!-- SETTLEMENT -->
             <li class="nav-item">
-                <a class="nav-link <?= ($pagename == 'settlement.php') ? 'active' : ''; ?>"
-                    href="settlement.php">
+                <a class="nav-link <?= ($pagename == 'settle-orders.php') ? 'active' : ''; ?>"
+                    href="settle-orders.php">
                     <i class="bi bi-check2-all me-4 text-secondary"></i>
                     <small class="text-black">Settlement</small>
                 </a>
@@ -138,24 +144,6 @@
                     href="report.php">
                     <i class="bi bi-journal-text me-4 text-secondary"></i>
                     <small class="text-black">Report</small>
-                </a>
-            </li>
-
-            <!-- ATTENDANCE -->
-            <li class="nav-item">
-                <a class="nav-link <?= ($pagename == 'attendance.php') ? 'active' : ''; ?>"
-                    href="attendance.php">
-                    <i class="bi bi-people-fill me-4 text-secondary"></i>
-                    <small class="text-black">Attendance & Salary</small>
-                </a>
-            </li>
-
-            <!-- STORE -->
-            <li class="nav-item">
-                <a class="nav-link <?= ($pagename == 'my-store.php') ? 'active' : ''; ?>"
-                    href="my-store.php">
-                    <i class="bi bi-shop-window me-4 text-secondary"></i>
-                    <small class="text-black">My Store</small>
                 </a>
             </li>
 

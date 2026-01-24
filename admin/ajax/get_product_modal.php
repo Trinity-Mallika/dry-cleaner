@@ -1,13 +1,8 @@
-<?php
-include_once("../../adminsession.php");
+<?php include_once("../../adminsession.php");
 
 $mode = $_POST['mode'] ?? 'add';
 $order_item_id = (int)($_POST['order_item_id'] ?? 0);
-$from_landry = (int)($_POST['from_landry'] ?? 0);
-
-$item_id = 0;
-$item_type_master_id = 0;
-$qty = 1;
+$qty = 0;
 $is_washing = 0;
 $is_pressing = 0;
 $selection = [];
@@ -40,9 +35,16 @@ $selectedReqIds = array_column($selection['requirements'] ?? [], 'id');
 $selectedCommentIds = $selection['comments'] ?? [];
 ?>
 
-<div class="modal-header">
-    <h1 class="modal-title fs-5"><?= $item_name; ?></h1>
-    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal-header justify-content-between">
+    <h1 class="modal-title fs-5" id="modal_item"><?= $item_name; ?></h1>
+    <a href="#"
+        role="button"
+        aria-label="Close"
+        onclick="this.blur()"
+        data-bs-dismiss="modal">
+        <i class="bi bi-x fs-3 text-black"></i>
+    </a>
+
 </div>
 
 <div class="modal-body">
@@ -161,11 +163,9 @@ $selectedCommentIds = $selection['comments'] ?? [];
                 </div>
 
             </div>
-
-
         </div>
+        <div id="garment-items"></div>
         <a href="javascript:void(0)" onclick="show_garment_modal();" class="btn bg-body-secondary w-100">Add Garment</a>
-
     <?php } ?>
 </div>
 
@@ -174,20 +174,21 @@ $selectedCommentIds = $selection['comments'] ?? [];
 
     <div class="count-box">
         <button class="count-btn" data-action="minus">-</button>
-        <input type="text"
+        <input
+            type="text"
             class="qty-value form-control d-inline-block text-center"
             value="<?= $qty ?>"
             style="width:70px"
-            inputmode="numeric"
-            pattern="[0-9]*"
-            oninput="onlyDigits(this),syncQty(this)">
-        <span> <?php if ($item_id != 2) { ?>
-                <?= $item_in == 1 ? 'PR' : 'PC'; ?>
-            <?php } else { ?>
-                Kg
-            <?php } ?>
+            <?= ($item_id == 2)
+                ? 'step="0.01" min="0" inputmode="decimal"'
+                : 'inputmode="numeric" pattern="[0-9]*"' ?>
+            oninput="<?= ($item_id == 2)
+                            ? 'allowDecimal(this); syncQty(this)'
+                            : 'onlyDigits(this); syncQty(this)' ?>">
+        <span>
+            <?= ($item_id == 2) ? 'Kg' : ($item_in == 1 ? 'PR' : 'PC'); ?>
         </span>
-        <input type="hidden" id="from_landry" value="<?= $from_landry; ?>">
+
         <button class="count-btn" data-action="plus">+</button>
     </div>
 
@@ -211,7 +212,9 @@ $selectedCommentIds = $selection['comments'] ?? [];
     </a>
 
 </div>
-
+<script>
+    window.__EDIT_SELECTION__ = <?= json_encode($selection); ?>;
+</script>
 <script>
     get_service(
         '<?= $item_type_master_id ?>',
@@ -219,7 +222,4 @@ $selectedCommentIds = $selection['comments'] ?? [];
         null,
         'modal'
     );
-</script>
-<script>
-    window.__EDIT_SELECTION__ = <?= json_encode($selection['services'] ?? []); ?>;
 </script>

@@ -293,3 +293,25 @@ tr,
 td {
   padding: 3px 3px !important;
 }
+
+
+/* tab style  */
+.product_search_list li:not(:first-child) {
+    margin-left: 4px; /* adjust as needed */
+}
+
+.product_search_list li a {
+    font-size: 10px;
+    background-color: #ced4da;
+    color: black;
+    border-radius: 1px;
+}
+.product_search_list li a:hover {
+    color: rgb(3, 69, 3);
+    background-color: rgba(77, 241, 77, 0.363);
+}
+.nav-pills .nav-link.active, .nav-pills .show > .nav-link,
+.product_search_list li a:active {
+    color: white;
+    background-color: #198754 !important;
+}

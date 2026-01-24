@@ -70,23 +70,21 @@ if ($id == 1) {
             <div class="card mb-3 shadow-sm rounded-1 border-0 item-card" data-name="<?= strtolower($key['item_name']); ?>">
                 <div class="card-body p-2">
                     <div class="row">
-
                         <div class="col-lg-9 col-12">
                             <h6 class="mb-0"><?= $key['item_name']; ?></h6>
                             <?php if ($key['item_id'] != 2) { ?>
                                 <div class="mt-2">
                                     <?php
                                     $item_types = $obj->executequery("
-            SELECT item_type_master_id,item_type_master_name
-            FROM item_type_master
-            WHERE item_id='{$key['item_id']}'
-        ");
+                                    SELECT item_type_master_id,item_type_master_name
+                                    FROM item_type_master
+                                    WHERE item_id='{$key['item_id']}'
+                                ");
 
                                     $i = 0;
                                     foreach ($item_types as $type):
-                                        $isFirst = ($i === 0);
                                     ?>
-                                        <a href="javascript:void(0)" class="badge rounded-1 mb-2 item-type text-decoration-none <?= $isFirst ? 'bg-success text-white active' : 'bg-dark-subtle text-black' ?>"
+                                        <a href="javascript:void(0)" class="badge item-type rounded-1 fs-10 p-1 text-decoration-none bg-dark-subtle text-black"
                                             data-item="<?= $key['item_id']; ?>"
                                             data-type="<?= $type['item_type_master_id']; ?>"
                                             onclick="setActiveType(this)">
@@ -101,8 +99,7 @@ if ($id == 1) {
 
                             </div>
                         </div>
-                        <div class="col-lg-3 col-3 text-center">
-                            <img src="img/logo.png" width="90" class="mb-2" alt="">
+                        <div class="col-lg-3 col-3 d-flex justify-content-center align-items-center text-center">
                             <button onclick="show_modal('<?= $key['item_id']; ?>', this)"
                                 class="btn btn-success btn-sm w-100">
                                 Add

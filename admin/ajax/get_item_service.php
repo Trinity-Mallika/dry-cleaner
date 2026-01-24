@@ -11,8 +11,7 @@ $item_in = $obj->getvalfield(
     "item_id='$item_id'"
 );
 
-$item_services = $obj->executequery("
-    SELECT 
+$item_services = $obj->executequery("SELECT 
         A.add_service_id,
         A.rate,
         B.item_sname,

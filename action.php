@@ -139,6 +139,8 @@ class DataOperation extends Database
 		}
 		return $num;
 	}
+
+
 	function getIndianCurrency(float $number)
 	{
 		// echo $number;
