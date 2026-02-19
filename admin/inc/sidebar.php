@@ -4,8 +4,8 @@
     <div class="offcanvas-body p-0 pb-4">
 
         <!-- USER -->
-        <div class="d-flex gap-3 p-3 border-bottom">
-            <div class="rounded-circle bg-light d-flex align-items-center justify-content-center"
+        <div class="d-flex gap-3 border-bottom">
+            <!-- <div class="rounded-circle bg-light d-flex align-items-center justify-content-center"
                 style="width:48px;height:48px">
                 <i class="bi bi-person-fill fs-2"></i>
             </div>
@@ -13,7 +13,8 @@
                 <strong>Mrs. Tabassum Khan</strong><br>
                 <small class="text-muted">FAB-CHHOTAPARA</small>
                 <div class="text-success small">★★★★★</div>
-            </div>
+            </div> -->
+            <img src="assets/logo.jpeg" alt="" width="100%">
         </div>
 
         <!-- MENU -->
@@ -125,7 +126,16 @@
                 <a class="nav-link <?= ($pagename == 'bill.php') ? 'active' : ''; ?>"
                     href="bill.php">
                     <i class="bi bi-receipt me-4 text-secondary"></i>
-                    <small class="text-black">Bill</small>
+                    <small class="text-black">Invoices</small>
+                </a>
+            </li>
+
+            <!-- Pending Payments -->
+            <li class="nav-item">
+                <a class="nav-link <?= ($pagename == 'pending-payments.php') ? 'active' : ''; ?>"
+                    href="pending-payments.php">
+                    <i class="bi bi-receipt me-4 text-secondary"></i>
+                    <small class="text-black">Pending Payments</small>
                 </a>
             </li>
 
@@ -134,29 +144,18 @@
                 <a class="nav-link <?= ($pagename == 'payment.php') ? 'active' : ''; ?>"
                     href="payment.php">
                     <i class="bi bi-person-rolodex me-4 text-secondary"></i>
-                    <small class="text-black">Payment</small>
+                    <small class="text-black">Payment Summary</small>
                 </a>
             </li>
 
             <!-- REPORT -->
-            <li class="nav-item">
+            <!-- <li class="nav-item">
                 <a class="nav-link <?= ($pagename == 'report.php') ? 'active' : ''; ?>"
                     href="report.php">
                     <i class="bi bi-journal-text me-4 text-secondary"></i>
                     <small class="text-black">Report</small>
                 </a>
-            </li>
-
-            <hr>
-
-            <!-- LOGOUT -->
-            <li class="nav-item">
-                <a class="nav-link" href="index.php">
-                    <i class="bi bi-box-arrow-right me-4 text-danger fs-4"></i>
-                    <small class="text-black">Logout</small>
-                </a>
-            </li>
-
+            </li> -->
         </ul>
 
     </div>

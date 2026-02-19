@@ -20,6 +20,7 @@ if ($new_paid > $finalTotal) {
 
 $new_due = $finalTotal - $new_paid;
 $voucher_no = $obj->getcode("payment", "voucher_no", "1=1");
+$invoice_no = $obj->getcode("orders", "invoice_no", "1=1");
 
 $obj->insert_record("payment", [
     "order_id"     => $order_id,
@@ -33,7 +34,7 @@ $obj->insert_record("payment", [
     "createdate"   => $createdate,
 ]);
 if ($new_due == 0) {
-    $obj->update_record("orders", ["order_id" => $order_id], ["pay_status" => 1]);
+    $obj->update_record("orders", ["order_id" => $order_id], ["pay_status" => 1, "invoice_no" => $invoice_no]);
 }
 
 echo json_encode([

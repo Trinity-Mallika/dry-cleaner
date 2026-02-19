@@ -134,7 +134,7 @@ if (isset($_GET[$tblpkey])) {
                                 <?php
                                 $i = 1;
                                 // below 3 are set for laundry by weight
-                                $sql = $obj->executequery("select * from $tblname where item_service_id > 3 order by $tblpkey DESC ");
+                                $sql = $obj->executequery("select * from $tblname  order by $tblpkey DESC ");
 
                                 foreach ($sql as $key) {
 

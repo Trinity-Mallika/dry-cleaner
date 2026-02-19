@@ -177,7 +177,7 @@ $selectedCommentIds = $selection['comments'] ?? [];
         <input
             type="text"
             class="qty-value form-control d-inline-block text-center"
-            value="<?= $qty ?>"
+            value="<?= ($item_id == 2) ? $qty : (int)$qty ?>"
             style="width:70px"
             <?= ($item_id == 2)
                 ? 'step="0.01" min="0" inputmode="decimal"'

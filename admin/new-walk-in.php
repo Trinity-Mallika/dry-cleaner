@@ -43,8 +43,6 @@ if (isset($_POST['submit'])) {
             $customer_id = $obj->insert_record_lastid("m_customer", [
                 'customer_name' => $cust_name,
                 "mobile" => $mobile_no,
-                "delivery_address" => $delivery_address,
-                "delivery_address_type" => $delivery_address_type,
                 "ipaddress" => $ipaddress,
                 "createdby" => $loginid,
                 "createdate" => $createdate
@@ -65,6 +63,8 @@ if (isset($_POST['submit'])) {
             'order_no'          => $order_no,
             'customer_id'       => $customer_id,
             'address_id'       => $address_id,
+            'is_home_delivery'       => $is_home_delivery,
+            'is_express_delivery'       => $is_express_delivery,
             "delivery_date"     => $delivery_date,
             "delivery_slot"     => $delivery_slot,
             "gross_total"       => $gross_total,
@@ -100,18 +100,121 @@ if (isset($_POST['submit'])) {
             "createdate"        => $createdate,
         ]);
 
-
+        $keyvalue = $lastid;
         $action = 1;
-    }
+    } else {
+        if ($customer_id == 0) {
+            $customer_id = $obj->insert_record_lastid("m_customer", [
+                'customer_name' => $cust_name,
+                "mobile" => $mobile_no,
+                "ipaddress" => $ipaddress,
+                "createdby" => $loginid,
+                "createdate" => $createdate
+            ]);
+        }
+        if ($is_home_delivery == 1 && $address_id == 0) {
+            $address_id = $obj->insert_record_lastid("m_address", [
+                "customer_id"   => $customer_id,
+                "address"       => $delivery_address,
+                "address_type"  => $delivery_address_type,
+                "ipaddress"     => $ipaddress,
+                "createdby"     => $loginid,
+                "createdate"    => $createdate
+            ]);
+        }
 
-    echo "<script>location='$pagename?action=$action'</script>";
+        $obj->update_record("orders", ["order_id" => $keyvalue], [
+            'customer_id'       => $customer_id,
+            'address_id'        => $address_id,
+            'is_home_delivery'  => $is_home_delivery,
+            'is_express_delivery' => $is_express_delivery,
+            "delivery_date"     => $delivery_date,
+            "delivery_slot"     => $delivery_slot,
+            "gross_total"       => $gross_total,
+            "discount_amt"      => $discount_amt,
+            "final_total"       => $final_total,
+            "coupon_master_id"  => $coupon_master_id,
+            "coupon_percent"    => $coupon_percent,
+            "express_percent"   => $express_percent,
+            "express_amount"    => $express_amount,
+            "total_count"       => $total_count,
+            "ipaddress"         => $ipaddress,
+            "createdby"         => $loginid,
+            "lastupdated"       => $createdate,
+            "sessionid"         => $sessionid
+        ]);
+
+        $action = 2;
+    }
+    echo "<script>location='$pagename?action=$action&orderno=$order_no&orderid=$keyvalue'</script>";
 }
 
 if (isset($_GET[$tblpkey])) {
     $where = array($tblpkey => $keyvalue);
     $sqledit = $obj->select_record($tblname, $where);
+    $customer_id = $sqledit['customer_id'];
+    $cust_name = $obj->getvalfield("m_customer", "customer_name", "customer_id='$customer_id'");
+    $mobile = $obj->getvalfield("m_customer", "mobile", "customer_id='$customer_id'");
+    $address_id = $sqledit['address_id'];
+    $delivery_address_type = $obj->getvalfield("m_address", "address_type", "address_id='$address_id'");
+    $delivery_address = $obj->getvalfield("m_address", "address", "address_id='$address_id'");
+    $order_no = $sqledit['order_no'];
+    $delivery_date = $sqledit['delivery_date'];
+    $delivery_slot = $sqledit['delivery_slot'];
+    $is_home_delivery = $sqledit['is_home_delivery'];
+    $is_express_delivery = $sqledit['is_express_delivery'];
+    $express_percent = $sqledit['express_percent'];
+    $coupon_master_id = $sqledit['coupon_master_id'];
+    $coupon_percent = $sqledit['coupon_percent'];
+    $readonly = "readonly";
+} else {
+    $customer_id = $express_percent = $coupon_master_id = $coupon_percent = $is_home_delivery = $is_express_delivery = 0;
+    $cust_name = $mobile = $delivery_address_type = $delivery_address = $delivery_slot = $delivery_date = "";
+    $readonly = "";
 }
+$coupon_name = '';
+if ($coupon_master_id > 0) {
+    $coupon_name = $obj->getvalfield(
+        "coupon_master",
+        "coupon_name",
+        "coupon_master_id='$coupon_master_id'"
+    );
+}
+
 ?>
+<?php if (isset($_GET['action']) && $_GET['action'] == 1) { ?>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+
+            const orderNo = "<?= $_GET['orderno'] ?>";
+            const orderId = "<?= $_GET['orderid'] ?>";
+
+            // inject order number
+            document.getElementById("successOrderNo").innerText = orderNo;
+
+            // update print links
+            document.getElementById("printReceiptBtn").href =
+                "receipt_pdf.php?order_id=" + orderId;
+
+            document.getElementById("printTagBtn").href =
+                "tag_print.php?order_id=" + orderId;
+
+            // show modal
+            const modal = new bootstrap.Modal(
+                document.getElementById('orderSuccessModal')
+            );
+
+            modal.show();
+
+
+            modal.addEventListener('hidden.bs.modal', function() {
+                location.href = "<?= $pagename ?>"; // clean reload (removes GET params)
+            });
+
+        });
+    </script>
+<?php } ?>
+
 <html lang="en">
 
 <head>
@@ -133,6 +236,11 @@ if (isset($_GET[$tblpkey])) {
             cursor: pointer;
             line-height: 5px;
         }
+
+        .form-check-input:checked {
+            background-color: #198754 !important;
+            border-color: #198754 !important;
+        }
     </style>
 </head>
 <?php include('inc/css-link.php') ?>
@@ -145,7 +253,6 @@ if (isset($_GET[$tblpkey])) {
     <div id="mainWrapper" class="main-content">
         <!-- Sidebar Close-->
         <div class="container-fluid mt-5 mb-5">
-            <?php include('inc/alert.php'); ?>
             <div class="row">
                 <div class="col-lg-6 col-12">
                     <div class="card card-body rounded-1">
@@ -160,8 +267,8 @@ if (isset($_GET[$tblpkey])) {
                                         inputmode="numeric"
                                         maxlength="10"
                                         class="form-control"
-                                        onchange="find_cust(this.value); setFinalBtn();">
-                                    <input type="hidden" name="customer_id" id="customer_id" value="0">
+                                        onchange="find_cust(this.value); setFinalBtn();" value="<?= $mobile ?>">
+                                    <input type="hidden" name="customer_id" id="customer_id" value="<?= $customer_id ?>">
                                 </div>
                                 <div class="mb-2">
                                     <label for="cust_name" class="fw-bold">Name</label>
@@ -169,33 +276,33 @@ if (isset($_GET[$tblpkey])) {
                                         type="text"
                                         name="cust_name"
                                         id="cust_name"
-                                        class="form-control"
-                                        onchange="setFinalBtn();">
+                                        class="form-control <?= ($readonly != '') ? "bg-body-secondary" : '' ?>"
+                                        onchange="setFinalBtn();" value="<?= $cust_name; ?>" <?= $readonly; ?>>
                                 </div>
                             </div>
                             <hr>
                             <div id="fetch_data">
                             </div>
                             <hr>
-                            <div id="couponSection" class="text-center"> <a href="javascript:void(0)" id="addCouponBtn" class="btn btn-sm bg-body-secondary" data-bs-toggle="modal" data-bs-target="#coupon"> <i class="bi bi-ticket-perforated-fill"></i>&nbsp;Add Coupon </a>
+                            <div id="couponSection" class="text-center "> <a href="javascript:void(0)" id="addCouponBtn" class="btn btn-sm bg-body-secondary" data-bs-toggle="modal" data-bs-target="#coupon"> <i class="bi bi-ticket-perforated-fill"></i>&nbsp;Add Coupon </a>
                                 <div id="appliedCouponBox" class="d-none align-items-center gap-2 bg-success-subtle text-success p-2 rounded mt-2"> <i class="bi bi-ticket-perforated-fill"></i> <strong id="appliedCouponName"></strong> <span class="badge bg-success"> <span id="appliedCouponPercent"></span>% OFF </span> <i class="bi bi-x-circle-fill cursor-pointer text-danger" onclick="removeCoupon()"></i> </div>
                             </div>
                             <h6 class="text-secondary fw-bold mt-3"> Gross Total <span class="float-end" id="grossTotal">0</span> </h6>
                             <h6 class="text-secondary fw-bold"> Discount Amount <span class="float-end" id="discountAmount">0</span> </h6>
                             <h6 class="text-secondary fw-bold" id="expressAmountDisplay">Express Amount: <span class="float-end" id="expressAmount">0</span></h6>
                             <h6 class="text-secondary fw-bold">Total Count: <span class="float-end" data-total-count>0pc</span></h6>
-                            <h6 class="fw-bold mt-3"> Total Amount <span class="float-end" id="finalTotal">0</span> </h6> <input type="hidden" name="gross_total" id="gross_total"> <input type="hidden" name="discount_amt" id="discount_amt"> <input type="hidden" name="final_total" id="final_total"> <input type="hidden" name="coupon_master_id" id="coupon_master_id"> <input type="hidden" name="coupon_percent" id="coupon_percent"> <input type="hidden" name="total_count" id="total_count">
+                            <h6 class="fw-bold mt-3"> Total Amount <span class="float-end" id="finalTotal">0</span> </h6> <input type="hidden" name="gross_total" id="gross_total"> <input type="hidden" name="discount_amt" id="discount_amt"> <input type="hidden" name="final_total" id="final_total"> <input type="hidden" name="coupon_master_id" id="coupon_master_id" value="<?= $coupon_master_id; ?>"> <input type="hidden" name="coupon_percent" id="coupon_percent" value="<?= $coupon_percent ?>"> <input type="hidden" name="total_count" id="total_count">
                             <hr>
                             <!-- Delivery Date & Slot -->
                             <div class="d-flex justify-content-between gap-3 mb-3">
                                 <div class="flex-fill">
                                     <label class="fw-bold">Delivery Date</label>
-                                    <input type="date" class="form-control" name="delivery_date" id="delivery_date">
+                                    <input type="date" class="form-control" name="delivery_date" id="delivery_date" value="<?= $delivery_date; ?>" onchange="setFinalBtn();">
                                 </div>
 
                                 <div class="flex-fill">
                                     <label class="fw-bold">Delivery Timeslot</label>
-                                    <select class="form-control" name="delivery_slot" id="delivery_slot">
+                                    <select class="form-control" name="delivery_slot" id="delivery_slot" onchange="setFinalBtn();">
                                         <option value="">Select Slot</option>
                                         <option>7 AM - 8 AM</option>
                                         <option>8 AM - 9 AM</option>
@@ -213,73 +320,82 @@ if (isset($_GET[$tblpkey])) {
                                         <option>8 PM - 9 PM</option>
                                         <option>9 PM - 10 PM</option>
                                     </select>
+                                    <script>
+                                        document.getElementById('delivery_slot').value = '<?= $delivery_slot; ?>';
+                                    </script>
                                 </div>
                             </div>
-
+                            <hr>
                             <!-- Home Delivery -->
-                            <div class="d-flex align-items-center justify-content-between mb-2">
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="form-check form-switch">
-                                        <input
-                                            class="form-check-input"
-                                            type="checkbox"
-                                            id="home_delivery">
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="form-check form-switch">
+                                            <input
+                                                class="form-check-input"
+                                                type="checkbox"
+                                                id="home_delivery" <?= ($is_home_delivery == 1) ? "checked" : "" ?> onchange="homeDelivery();">
+                                        </div>
+                                        <label class="fw-semibold mb-0" for="home_delivery">
+                                            Home Delivery
+                                        </label>
                                     </div>
-                                    <label class="fw-semibold mb-0" for="home_delivery">
-                                        Home Delivery
-                                    </label>
-                                </div>
 
-                                <!-- Address block -->
-                                <div id="addAddressBtn" class="d-none w-50">
-                                    <select class="form-control form-control-sm mb-1" id="delivery_address_type" name="delivery_address_type">
-                                        <option value="Home" selected>Home</option>
-                                        <option value="Office">Office</option>
-                                        <option value="Other">Other</option>
+                                    <!-- Address block -->
+                                    <div id="addAddressBtn" class="d-none mt-2">
+                                        <select class="form-control form-control-sm mb-1" id="delivery_address_type" name="delivery_address_type">
+                                            <option value="Home" selected>Home</option>
+                                            <option value="Office">Office</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                        <script>
+                                            document.getElementById('delivery_address_type').value = '<?= $delivery_address_type; ?>';
+                                        </script>
+                                        <textarea class="form-control form-control-sm"
+                                            id="delivery_address" name="delivery_address"
+                                            rows="2"
+                                            placeholder="Enter delivery address" onkeyup="setFinalBtn();"><?= $delivery_address; ?></textarea>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <!-- Express Delivery -->
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="express_delivery" onchange="CheckExpress();" <?= ($is_express_delivery == 1) ? "checked" : "" ?>>
+                                        </div>
+                                        <label class="fw-semibold mb-0" for="express_delivery">
+                                            Express Delivery
+                                        </label>
+                                    </div>
+
+                                    <select class="form-control form-control-sm d-none mt-2" id="express_charge">
+                                        <option value="0">Select</option>
+                                        <option value="25">25% Extra</option>
+                                        <option value="50">50% Extra</option>
+                                        <option value="100">100% Extra</option>
                                     </select>
-
-                                    <textarea class="form-control form-control-sm"
-                                        id="delivery_address" name="delivery_address"
-                                        rows="2"
-                                        placeholder="Enter delivery address"></textarea>
+                                    <script>
+                                        document.getElementById('express_charge').value = '<?= $express_percent; ?>';
+                                    </script>
                                 </div>
-
                             </div>
                             <input type="hidden" name="address_id" id="address_id" value="0">
-
-                            <!-- Express Delivery -->
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" id="express_delivery" onchange="CheckExpress();">
-                                    </div>
-                                    <label class="fw-semibold mb-0" for="express_delivery">
-                                        Express Delivery
-                                    </label>
-                                </div>
-
-                                <select
-                                    class="form-control form-control-sm w-50 d-none"
-                                    id="express_charge">
-                                    <option value="0">Select</option>
-                                    <option value="25">25% Extra</option>
-                                    <option value="50">50% Extra</option>
-                                    <option value="100">100% Extra</option>
-                                </select>
-                            </div>
-
                             <!-- Hidden fields -->
                             <input type="hidden" name="is_home_delivery" id="is_home_delivery" value="1">
                             <input type="hidden" name="is_express_delivery" id="is_express_delivery" value="1">
-                            <input type="hidden" name="express_percent" id="express_percent" value="0">
-
+                            <input type="hidden" name="express_percent" id="express_percent" value="<?= $express_percent; ?>">
+                            <input type="hidden" name="express_amount" id="express_amount">
                             <button
-                                type="submit" name="submit"
+                                type="submit"
+                                name="submit"
                                 class="btn btn-success btn-sm mt-3 fw-semibold w-100"
                                 id="submitBtn"
                                 disabled>
-                                Create Order
+
+                                <span id="btnText">Create Order</span>
+                                <span id="btnLoader" class="spinner-border spinner-border-sm d-none ms-2"></span>
                             </button>
+
                         </form>
                     </div>
                 </div>
@@ -293,6 +409,42 @@ if (isset($_GET[$tblpkey])) {
         </div>
     </div>
 
+
+    <!-- Modal -->
+    <div class="modal fade" id="orderSuccessModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="orderSuccessModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body p-4">
+
+                    <!-- Order Number -->
+                    <h5 class="mb-3">Order #<span id="successOrderNo"></span></h5>
+
+                    <!-- Success Message -->
+                    <p class="text-success mb-1">
+                        Order created successfully.
+                    </p>
+
+                    <p class="text-muted mb-4">
+                        Print the <strong>receipt</strong> and give one copy to the customer.
+                    </p>
+
+                    <!-- Actions -->
+                    <div class="border-top d-flex flex-wrap justify-content-around">
+                        <a href="<?= $pagename; ?>"
+                            class="btn btn-link text-danger text-decoration-none p-0 fw-bold">
+                            CLOSE
+                        </a>
+                        <a id="printReceiptBtn" class="btn btn-link text-success text-decoration-none p-0 fw-medium" target="_blank">
+                            PRINT RECEIPT
+                        </a>
+                        <a id="printTagBtn" class="btn btn-link text-success text-decoration-none p-0 fw-medium" target="_blank">
+                            PRINT TAG
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- modal coupon Start -->
     <div class="modal fade" id="coupon" tabindex="-1" aria-labelledby="couponLabel" aria-hidden="true">
@@ -334,8 +486,8 @@ if (isset($_GET[$tblpkey])) {
 
 
     <!-- modal add-product-laundry Start -->
-    <div class="modal fade" id="laundryModal" tabindex="-1" aria-labelledby="laundryModalLabel">
-        <div class="end-0 modal-dialog modal-fullscreen position-absolute" style="width: 30% !important;">
+    <div class="modal fade" id="laundryModal" tabindex="-1" aria-labelledby="laundryModalLabel" style="background: rgb(11 12 12 / 18%) !important;">
+        <div class="end-0 modal-dialog modal-fullscreen position-absolute" style="width: 30% !important;" style="filter: drop-shadow(1px 4px 4px black);">
             <div class="modal-content" id="laundry-data">
 
             </div>
@@ -346,28 +498,46 @@ if (isset($_GET[$tblpkey])) {
 </body>
 <?php include('inc/js-link.php') ?>
 <script>
+    document.querySelector("form").addEventListener("submit", function() {
+
+        const btn = document.getElementById("submitBtn");
+        const loader = document.getElementById("btnLoader");
+        const text = document.getElementById("btnText");
+
+        // btn.disabled = true;
+        loader.classList.remove("d-none");
+        text.innerText = "Processing...";
+    });
+
+
+    window.EDIT_COUPON = <?= ($coupon_master_id > 0) ? json_encode([
+                                'id'      => $coupon_master_id,
+                                'name'    => $coupon_name,
+                                'percent' => $coupon_percent
+                            ]) : 'null'; ?>;
+
     window.LAUDRY_STATE = {
         service: null,
         addons: [],
         qty: 0,
         areas: []
     };
-
     document.addEventListener('click', e => {
+
         const btn = e.target.closest('.count-btn');
         if (!btn) return;
 
         const box = btn.closest('.count-box');
         const qtyEl = box.querySelector('.qty-value');
 
-        let qty = parseFloat(qtyEl.value || qtyEl.textContent) || 0;
+        const rawQty = qtyEl ? (qtyEl.value || qtyEl.textContent) : 0;
+        let qty = parseFloat(rawQty) || 0;
 
         if (btn.dataset.action === 'plus') qty++;
         if (btn.dataset.action === 'minus' && qty > 0) qty--;
 
         qtyEl.value = qty;
 
-        // ✅ persist for restore
         if (box.closest('#productModal')) {
             window.LAUDRY_STATE.qty = qty;
         }
@@ -379,7 +549,32 @@ if (isset($_GET[$tblpkey])) {
     $(document).ready(function() {
         show_products();
         fetch_details();
+        if (window.EDIT_COUPON) {
+            appliedCoupon = window.EDIT_COUPON;
+
+            document.getElementById('addCouponBtn').classList.add('d-none');
+            document.getElementById('appliedCouponBox').classList.remove('d-none');
+
+            document.getElementById('appliedCouponName').innerText =
+                appliedCoupon.name;
+
+            document.getElementById('appliedCouponPercent').innerText =
+                appliedCoupon.percent;
+
+            document.getElementById('coupon_master_id').value =
+                appliedCoupon.id;
+
+            document.getElementById('coupon_percent').value =
+                appliedCoupon.percent;
+
+            recalculateTotals();
+        }
+
+
         show_discounts();
+        homeDelivery();
+
+
     });
 
     let appliedCoupon = null;
@@ -401,27 +596,20 @@ if (isset($_GET[$tblpkey])) {
         let discount = 0;
         let expressAmount = 0;
 
-        // Coupon Discount
         if (appliedCoupon?.percent) {
             discount = (gross * appliedCoupon.percent) / 100;
         }
 
-        // Express Charge
         if (expressPercent > 0) {
             expressAmount = (gross * expressPercent) / 100;
         }
 
-        // ✅ Final Total = Gross - Discount + Express
         const finalTotal = Math.max(0, gross - discount + expressAmount);
-
         document.getElementById('grossTotal').textContent = gross.toFixed(2);
         document.getElementById('discountAmount').textContent = discount.toFixed(2);
-
-        // ✅ FIXED (was showing discount)
         document.getElementById('expressAmount').textContent = expressAmount.toFixed(2);
-
+        document.getElementById('express_amount').value = expressAmount.toFixed(2);
         document.getElementById('finalTotal').textContent = finalTotal.toFixed(2);
-
         document.getElementById('total_count').value = count;
         document.getElementById('gross_total').value = gross.toFixed(2);
         document.getElementById('discount_amt').value = discount.toFixed(2);
@@ -493,7 +681,6 @@ if (isset($_GET[$tblpkey])) {
 
     // fetch products
     function show_products(alpha = 'ALL', id = "1") {
-
         const isLaundryByWeight = (String(id) === '2');
 
         $.ajax({
@@ -507,7 +694,6 @@ if (isset($_GET[$tblpkey])) {
                 if (isLaundryByWeight) {
                     $('#fetch_garment').html(data);
                 } else {
-                    // normal onscreen listing
                     $('#show_products').html(data);
                     initDefaultServices();
                 }
@@ -516,7 +702,6 @@ if (isset($_GET[$tblpkey])) {
     }
 
     function show_garment_modal() {
-
         $('#productModal').modal("hide");
         $('#garment-details').modal("show");
 
@@ -526,11 +711,8 @@ if (isset($_GET[$tblpkey])) {
     function close_modal_garment() {
         $('#garment-details').modal('hide');
         $('#productModal').modal('show');
-
         get_service(1, 2, null, 'modal');
     }
-
-
 
     function restoreLaundryModalFromState() {
 
@@ -555,6 +737,7 @@ if (isset($_GET[$tblpkey])) {
 
         const qtyEl = document.querySelector('#laundryModal .qty-value');
         if (qtyEl) qtyEl.value = Math.max(1, parseFloat(st.qty || 1));
+
 
         const areas = Array.isArray(st.areas) ? st.areas : [];
         document.querySelectorAll('.process-area').forEach(chk => {
@@ -618,7 +801,7 @@ if (isset($_GET[$tblpkey])) {
         });
     }
     // update product laundry
-    function handleLaundryUpdate(order_item_laundry_id) {
+    function handleLaundryUpdate(order_item_laundry_id, mode = '') {
         const payload = collectModalData1();
 
         $.ajax({
@@ -626,6 +809,7 @@ if (isset($_GET[$tblpkey])) {
             url: 'ajax/save_order_item_laundry.php',
             data: {
                 order_item_laundry_id: order_item_laundry_id,
+                keyvalue: '<?= $keyvalue ?>',
                 data: payload
             },
             success: function(res) {
@@ -647,10 +831,18 @@ if (isset($_GET[$tblpkey])) {
                     showConfirmButton: false
                 }).then(() => {
                     $('#laundryModal').modal('hide');
+                    if (mode == "edit") {
+                        get_service(1, 2, null, 'modal');
+                    }
                     fetchlaundry_items();
                 });
             }
         });
+    }
+
+    function close_laundry_modal() {
+        $('#laundryModal').modal('hide');
+        get_service(1, 2, null, 'modal');
     }
 
     // delete laundry item
@@ -706,7 +898,6 @@ if (isset($_GET[$tblpkey])) {
 
 
     function filterLaundryItems(search, alpha) {
-
         document.querySelectorAll('.laundry-card').forEach(card => {
 
             const name = card.dataset.name;
@@ -743,8 +934,6 @@ if (isset($_GET[$tblpkey])) {
         });
     }
 
-
-
     function fetch_details() {
         $.ajax({
             type: 'POST',
@@ -779,22 +968,17 @@ if (isset($_GET[$tblpkey])) {
 
 
     // Home Delivery toggle
-    document.getElementById('home_delivery').addEventListener('change', function() {
-
+    function homeDelivery() {
         const customer_id = Number(document.getElementById('customer_id').value) || 0;
+        const home_delivery = document.getElementById('home_delivery');
         const addressBox = document.getElementById('addAddressBtn');
         const hidden = document.getElementById('is_home_delivery');
-
-        if (this.checked) {
-
+        const keyvalue = '<?= $keyvalue; ?>';
+        if (home_delivery.checked) {
             hidden.value = 1;
             addressBox.classList.remove('d-none');
-
-            // default values
             document.getElementById('delivery_address_type').value = 'Home';
-
-            // ✅ if customer exists, auto-fill last saved address
-            if (customer_id > 0) {
+            if (customer_id > 0 && keyvalue == 0) {
                 $.ajax({
                     type: 'POST',
                     url: 'ajax_getaddress.php',
@@ -828,22 +1012,31 @@ if (isset($_GET[$tblpkey])) {
             document.getElementById('delivery_address').value = '';
             document.getElementById('address_id').value = 0;
         }
-    });
-
+        setFinalBtn();
+    }
 
 
     // Express Delivery toggle
     function CheckExpress() {
+
         const checkbox = document.getElementById('express_delivery');
         const sel = document.getElementById('express_charge');
         const expAmt = document.getElementById('expressAmountDisplay');
 
-        document.getElementById('is_express_delivery').value = checkbox.checked ? 1 : 0;
+        document.getElementById('is_express_delivery').value =
+            checkbox.checked ? 1 : 0;
 
         if (checkbox.checked) {
+
             expAmt.classList.remove('d-none');
             sel.classList.remove('d-none');
+
+            if (sel.value === '0') {
+                sel.value = '0';
+            }
+
         } else {
+
             expAmt.classList.add('d-none');
             sel.classList.add('d-none');
 
@@ -858,9 +1051,8 @@ if (isset($_GET[$tblpkey])) {
     document.getElementById('express_charge').addEventListener('change', function() {
         document.getElementById('express_percent').value = this.value;
         recalculateTotals();
+        setFinalBtn();
     });
-
-
 
 
     function find_cust(mobile_no) {
@@ -881,7 +1073,11 @@ if (isset($_GET[$tblpkey])) {
             success: function(res) {
 
                 if (res.status === 'not_found') {
-                    $('#cust_name').val('').prop('readonly', false).focus();
+                    $('#cust_name')
+                        .val('')
+                        .prop('readonly', false)
+                        .removeClass('bg-body-secondary').focus();;
+
                     $('#customer_id').val(0);
 
                     Swal.fire({
@@ -894,16 +1090,17 @@ if (isset($_GET[$tblpkey])) {
                     });
 
                 } else {
-                    $('#cust_name').val(res.customer_name).prop('readonly', true);
+                    $('#cust_name')
+                        .val(res.customer_name)
+                        .prop('readonly', true)
+                        .addClass('bg-body-secondary');
+
                     $('#customer_id').val(res.customer_id); // ✅ set id
                     setFinalBtn();
                 }
             }
         });
     }
-
-
-
 
     // show product add modal
     function show_modal(item_id, btn) {
@@ -947,8 +1144,6 @@ if (isset($_GET[$tblpkey])) {
         });
     }
 
-
-
     // show service on change of item 
     function get_service(item_type_master_id, item_id = '', el = null, target = 'card') {
         let container;
@@ -974,7 +1169,6 @@ if (isset($_GET[$tblpkey])) {
                 container.innerHTML = data;
                 if (target === 'modal') {
                     setTimeout(() => {
-                        // ✅ restore laundry state here AFTER html injected
                         if (item_id === 2) {
                             restoreLaundryModalFromState();
                         } else {
@@ -982,7 +1176,6 @@ if (isset($_GET[$tblpkey])) {
                         }
                     }, 0);
                 }
-
             }
         });
     }
@@ -1018,15 +1211,12 @@ if (isset($_GET[$tblpkey])) {
     }
 
 
-
-
     // show selected services on edit
     function restoreSelectedServices(item_id) {
         const sel = window.__EDIT_SELECTION__;
 
         if (!sel) return;
 
-        // ✅ normal items selection is inside sel.services
         let servicesArr = sel.services ?? sel.service ?? [];
 
         if (!Array.isArray(servicesArr)) servicesArr = [servicesArr];
@@ -1051,15 +1241,12 @@ if (isset($_GET[$tblpkey])) {
     }
 
 
-
-
     function applyServiceSelection(selectedIds, item_id) {
         item_id = parseInt(item_id, 10);
 
         const badges = document.querySelectorAll('#modal-services .service-badge');
         if (!badges.length) return;
 
-        // reset
         badges.forEach(b => {
             b.classList.remove('selected', 'bg-success', 'text-white');
             b.classList.add('bg-dark-subtle', 'text-black');
@@ -1161,24 +1348,36 @@ if (isset($_GET[$tblpkey])) {
     // set the first one active
     function initDefaultServices() {
         document.querySelectorAll('.item-card').forEach(card => {
-            card.querySelectorAll('.item-type.active').forEach(x => x.classList.remove('active'));
 
             const firstType = card.querySelector('.item-type');
-
             if (!firstType) return;
 
-            firstType.classList.remove('bg-dark-subtle', 'text-black', 'active');
+            const item_id = Number(firstType.dataset.item);
+
+            if (item_id === 2) {
+                get_service(
+                    firstType.dataset.type,
+                    item_id,
+                    firstType
+                );
+
+                firstType.classList.add('d-none');
+                return;
+            }
+
+            card.querySelectorAll('.item-type.active')
+                .forEach(x => x.classList.remove('active'));
+
+            firstType.classList.remove('bg-dark-subtle', 'text-black');
             firstType.classList.add('bg-success', 'text-white', 'active');
 
             get_service(
                 firstType.dataset.type,
-                firstType.dataset.item,
+                item_id,
                 firstType
             );
         });
     }
-
-
 
     function toggleService(el, item_id) {
         item_id = parseInt(item_id, 10);
@@ -1263,7 +1462,8 @@ if (isset($_GET[$tblpkey])) {
         const hasService = document.querySelectorAll('.service-badge.selected').length > 0;
 
         const qtyEl = document.querySelector('.qty-value');
-        const qty = qtyEl ? parseFloat(qtyEl.value || qtyEl.textContent) : 0;
+        const rawQty = qtyEl ? (qtyEl.value || qtyEl.textContent) : 1;
+        const qty = parseFloat(rawQty) || 0;
         const qtyOk = qty > 0;
 
         // Laundry By Weight extra validation
@@ -1292,7 +1492,9 @@ if (isset($_GET[$tblpkey])) {
         const item_type_master_id = itemTypeEl ? itemTypeEl.dataset.type : '';
 
         const qtyEl = modal.querySelector('.qty-value');
-        const qty = qtyEl ? parseInt(qtyEl.value || qtyEl.textContent, 10) : 1;
+        const rawQty = qtyEl ? (qtyEl.value || qtyEl.textContent) : 1;
+        const qty = parseFloat(rawQty) || 0;
+
 
         const areas = [];
         modal.querySelectorAll('.process-area:checked')
@@ -1395,22 +1597,62 @@ if (isset($_GET[$tblpkey])) {
     }
 
     function setFinalBtn() {
+
         const btn = document.getElementById('submitBtn');
         const mobile = document.getElementById('mobile_no');
         const name = document.getElementById('cust_name');
+        const delivery_date = document.getElementById('delivery_date');
+        const delivery_slot = document.getElementById('delivery_slot');
 
-        if (!btn || !mobile || !name) return;
+        const homeDelivery = document.getElementById('home_delivery');
+        const expressDelivery = document.getElementById('express_delivery');
 
-        const mobileOk = mobile.value.trim().length === 10;
+        const delivery_address = document.getElementById('delivery_address');
+        const express_charge = document.getElementById('express_percent');
+
+        if (!btn || !mobile || !name) {
+            console.warn("Missing required DOM elements");
+            return;
+        }
+
+        const mobileOk = /^[6-9]\d{9}$/.test(mobile.value.trim());
         const nameOk = name.value.trim().length > 0;
 
-        // 🔥 product count check
+        const dateOk = delivery_date && delivery_date.value.trim().length > 0;
+        const slotOk = delivery_slot && delivery_slot.value.trim().length > 0;
+
         const countOk =
             window.ORDER_SUMMARY &&
             Number(window.ORDER_SUMMARY.count) >= 1;
 
-        btn.disabled = !(mobileOk && nameOk && countOk);
+        let deliveryOk = true;
+        let expressOk = true;
+
+        if (homeDelivery?.checked) {
+            deliveryOk =
+                delivery_address &&
+                delivery_address.value.trim().length > 0;
+        }
+
+        if (expressDelivery?.checked) {
+            expressOk = express_charge && express_charge.value > "0";
+        }
+
+
+        const finalState =
+            mobileOk &&
+            nameOk &&
+            countOk &&
+            dateOk &&
+            slotOk &&
+            deliveryOk &&
+            expressOk;
+
+        btn.disabled = !finalState;
     }
+
+
+
 
     function saveItemDetails(item_id) {
 
@@ -1426,6 +1668,7 @@ if (isset($_GET[$tblpkey])) {
             url: 'ajax/save_order_item.php',
             data: {
                 item_id: item_id,
+                keyvalue: '<?= $keyvalue ?>',
                 data: payload
             },
             success: function(response) {
@@ -1462,6 +1705,7 @@ if (isset($_GET[$tblpkey])) {
             data: {
                 order_item_laundry_id: 0,
                 item_id: item_id,
+                keyvalue: '<?= $keyvalue ?>',
                 data: payload
             },
             success: function(response) {

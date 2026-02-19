@@ -20,7 +20,6 @@ ob_start();
         foreach ($res as $key) {
             $item_type_master_name = $obj->getvalfield("item_type_master", "item_type_master_name", "item_type_master_id='{$key['item_type_master_id']}'");
             $grossTotal += $key['total_amount'];
-            $totalCount += $key['qty'];
 
             $selection = json_decode($key['selection_json'], true);
 
@@ -77,6 +76,7 @@ ob_start();
 ");
 
                 foreach ($lanitms as $row) {
+                    $totalCount += $row['qty'];
 
                     $itemText = $row['item_name'] . " [" . $row['item_type_master_name'] . "] X " . $row['qty'];
 
@@ -99,6 +99,8 @@ ob_start();
                 }
             } else {
                 /* ===== NORMAL ITEMS ===== */
+                $totalCount += $key['qty'];
+
                 foreach ($selection['services'] ?? [] as $srv) {
 
                     if (empty($srv['id'])) continue;
@@ -142,7 +144,7 @@ ob_start();
             }
 
             $qty = $key['qty'];
-            $unitPrice = number_format($key['total_amount'] / max(1, $qty), 2);
+            $unitPrice = number_format($key['total_amount'] / $qty, 2);
             $total = number_format($key['total_amount'], 2);
     ?>
             <!-- ITEM CARD -->

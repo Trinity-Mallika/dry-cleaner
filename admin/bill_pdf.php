@@ -49,7 +49,7 @@ $companyterm_cond = $obj->getvalfield("company_setting", "term_cond", "1=1");
 <body>
     <div class="bill">
         <p class="centered">
-            RECEIPT
+            TAX INVOICE
             <br><?= $companyname; ?>
             <br><?= $companyaddress; ?>
             <br>Phone No: <?= $companymobile; ?> / <?= $companymobile2; ?>
@@ -58,6 +58,7 @@ $companyterm_cond = $obj->getvalfield("company_setting", "term_cond", "1=1");
         <hr />
         <p>
             Booking Id: <?= $sqledit['order_no'] ?>
+            <?= ($sqledit['invoice_no'] != '') ? "<br>Invoice No: INV" . $sqledit['invoice_no'] : "" ?>
             <br>Date & Time: <?= $obj->dateformatindia($sqledit['createdate']) ?> <?= $sqledit['createtime'] ?>
         </p>
         <hr />
@@ -298,9 +299,5 @@ $companyterm_cond = $obj->getvalfield("company_setting", "term_cond", "1=1");
     </div>
 
 </body>
-<script>
-    // open Windows print dialog
-    window.print();
-</script>
 
 </html>

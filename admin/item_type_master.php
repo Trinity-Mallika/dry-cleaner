@@ -230,7 +230,7 @@ if (isset($_GET[$tblpkey])) {
                             <select type="text" class="form-select" name="item_service_id" id="item_service_id">
                                 <option value="">Select Service </option>
                                 <?php
-                                $item = $obj->executequery("SELECT * FROM item_service where item_service_id >3");
+                                $item = $obj->executequery("SELECT * FROM item_service");
 
                                 foreach ($item as $i) { ?>
                                     <option value="<?php echo $i['item_service_id']; ?>"><?php echo $i['item_sname']; ?></option>

@@ -72,28 +72,27 @@ if ($id == 1) {
                     <div class="row">
                         <div class="col-lg-9 col-12">
                             <h6 class="mb-0"><?= $key['item_name']; ?></h6>
-                            <?php if ($key['item_id'] != 2) { ?>
-                                <div class="mt-2">
-                                    <?php
-                                    $item_types = $obj->executequery("
+
+                            <div class="mt-2">
+                                <?php
+                                $item_types = $obj->executequery("
                                     SELECT item_type_master_id,item_type_master_name
                                     FROM item_type_master
                                     WHERE item_id='{$key['item_id']}'
                                 ");
 
-                                    $i = 0;
-                                    foreach ($item_types as $type):
-                                    ?>
-                                        <a href="javascript:void(0)" class="badge item-type rounded-1 fs-10 p-1 text-decoration-none bg-dark-subtle text-black"
-                                            data-item="<?= $key['item_id']; ?>"
-                                            data-type="<?= $type['item_type_master_id']; ?>"
-                                            onclick="setActiveType(this)">
-                                            <?= $type['item_type_master_name']; ?>
-                                        </a>
-                                    <?php $i++;
-                                    endforeach; ?>
-                                </div>
-                            <?php } ?>
+                                $i = 0;
+                                foreach ($item_types as $type):
+                                ?>
+                                    <a href="javascript:void(0)" class="badge item-type rounded-1 fs-10 p-1 text-decoration-none bg-dark-subtle text-black"
+                                        data-item="<?= $key['item_id']; ?>"
+                                        data-type="<?= $type['item_type_master_id']; ?>"
+                                        onclick="setActiveType(this)">
+                                        <?= $type['item_type_master_name']; ?>
+                                    </a>
+                                <?php $i++;
+                                endforeach; ?>
+                            </div>
 
                             <div class="d-flex flex-wrap gap-2 mt-2 item-service">
 

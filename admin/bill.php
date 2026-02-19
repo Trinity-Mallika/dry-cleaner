@@ -8,7 +8,7 @@ $tblname = "orders";
 $tblpkey = "order_id";
 $keyvalue = (isset($_GET[$tblpkey])) ? $obj->test_input($_GET[$tblpkey]) : 0;
 $action = (isset($_GET['action'])) ? $obj->test_input($_GET['action']) : '';
-$crit = "WHERE o.pay_status=0";
+$crit = "WHERE 1=1";
 
 if (isset($_GET['order_no'])) {
     $order_no = $obj->test_input($_GET['order_no']);
@@ -18,24 +18,27 @@ if (isset($_GET['order_no'])) {
 } else {
     $order_no = "";
 }
-
-if (isset($_GET['mob_no'])) {
-    $mob_no = $obj->test_input($_GET['mob_no']);
-    if ($mob_no != '') {
-        $crit .= " and c.mobile LIKE '%$mob_no%'";
-    }
-} else {
-    $mob_no = "";
-}
-
 if (isset($_GET['status'])) {
     $status = $obj->test_input($_GET['status']);
     if ($status != '') {
-        $crit .= " and o.status='$status'";
+        $crit .= " and o.pay_status='$status'";
     }
 } else {
-    $status = "0";
+    $status = "1";
 }
+
+if ((isset($_GET['from_date'])) && (isset($_GET['to_date']))) {
+    $from_date = $_GET['from_date'];
+    $to_date = $_GET['to_date'];
+} else {
+    $from_date = date("Y-m-d");
+    $to_date = date("Y-m-d");
+}
+
+if ($from_date != '' && $to_date != '') {
+    $crit .= " AND o.createdate BETWEEN '$from_date' AND '$to_date'";
+}
+
 ?>
 <html lang="en">
 
@@ -119,22 +122,23 @@ if (isset($_GET['status'])) {
                     <form>
                         <div class="row">
                             <div class="col-lg-3">
-                                <label for="" class="fw-bold">Order No.</label>
-                                <input type="text" name="order_no" id="order_no" class="form-control" placeholder="Enter Order No." value="<?= $order_no; ?>">
+                                <label for="" class="fw-bold">From Date <span class="text-danger fw-bold">*</span></label>
+                                <input type="date" name="from_date" id="from_date" class="form-control" value="<?= $from_date ?>">
                             </div>
                             <div class="col-lg-3">
-                                <label for="" class="fw-bold">Mobile No. </label>
-                                <input type="text" name="mob_no" id="mob_no" class="form-control" placeholder="Enter Mobile No." value="<?= $mob_no; ?>">
+                                <label for="" class="fw-bold">To Date <span class="text-danger fw-bold">*</span></label>
+                                <input type="date" name="to_date" id="to_date" class="form-control" value="<?= $to_date ?>">
+                            </div>
+                            <div class="col-lg-3">
+                                <label for="" class="fw-bold">Order No.</label>
+                                <input type="text" name="order_no" id="order_no" class="form-control" placeholder="Enter Order No." value="<?= $order_no; ?>">
                             </div>
                             <div class="col-lg-3">
                                 <label for="status" class="fw-bold"> Status <span class="text-danger fw-bold"></span></label>
                                 <select name="status" id="status" class="form-select chosen-select">
                                     <option value="">Select</option>
-                                    <option value="0">Tagged</option>
-                                    <option value="1">Delivered</option>
-                                    <option value="2">Processing At Store</option>
-                                    <option value="3">Ready Order</option>
-                                    <option value="4">Cancelled</option>
+                                    <option value="0">Due</option>
+                                    <option value="1">Paid</option>
                                 </select>
                                 <script>
                                     document.getElementById('status').value = '<?= $status; ?>';
@@ -154,107 +158,70 @@ if (isset($_GET['status'])) {
                 <table id="example" class="table table-hover align-middle mb-0">
                     <thead class="table-light text-nowrap">
                         <tr>
-                            <td class="fw-semibold fs-14">Actions</td>
-                            <td class="fw-semibold fs-14">Order No.</td>
-                            <td class="fw-semibold fs-14">Order Status</td>
-                            <td class="fw-semibold fs-14">Due Amount</td>
-                            <td class="fw-semibold fs-14">Invoice Amount</td>
-                            <td class="fw-semibold fs-14">Delivery Date</td>
-                            <td class="fw-semibold fs-14">Delivery Timeslot</td>
-                            <td class="fw-semibold fs-14">Customer Name</td>
-                            <td class="fw-semibold fs-14">Customer Mobile</td>
-                            <td class="fw-semibold fs-14">Customer Address</td>
+                            <td class="fw-semibold">Actions</td>
+                            <td class="fw-semibold">Status</td>
+                            <td class="fw-semibold">Invoice No.</td>
+                            <td class="fw-semibold">Order No.</td>
+                            <td class="fw-semibold">Paid Amount</td>
+                            <td class="fw-semibold">Due Amount</td>
+                            <td class="fw-semibold">Total</td>
+                            <td class="fw-semibold">Tax</td>
+                            <td class="fw-semibold">Taxable Amt</td>
+                            <td class="fw-semibold">Express Amt</td>
+                            <td class="fw-semibold">Discount Amt</td>
+                            <td class="fw-semibold">Gross Total</td>
                         </tr>
                     </thead>
                     <tbody class="text-nowrap">
                         <?php
-                        $res = $obj->executequery("SELECT o.*,
-           c.customer_name,c.mobile,
-           a.address,
-           IFNULL(p.paid_amount,0) as paid_amount
+                        $res = $obj->executequery("SELECT 
+        o.*,
+        IFNULL(p.paid_amount,0) AS paid_amount,
+        IFNULL(t.taxable_amt,0) AS taxable_amt,
+        IFNULL(t.tax_amt,0) AS tax_amt
     FROM orders o
-    LEFT JOIN m_customer c ON c.customer_id = o.customer_id
-    LEFT JOIN m_address a ON a.address_id = o.address_id
     LEFT JOIN (
-        SELECT order_id, SUM(pay_amount) as paid_amount
+        SELECT order_id, SUM(pay_amount) AS paid_amount
         FROM payment
         GROUP BY order_id
     ) p ON p.order_id = o.order_id
+    LEFT JOIN (
+        SELECT 
+            order_id,
+            SUM(taxable_amount) AS taxable_amt,
+            SUM(cgst_amount + sgst_amount) AS tax_amt
+        FROM order_item
+        GROUP BY order_id
+    ) t ON t.order_id = o.order_id
     $crit
     ORDER BY o.order_id DESC
 ");
+
 
                         foreach ($res as $key) {
                         ?>
                             <tr>
                                 <td class="nowrap">
-                                    <?php if ($key['status'] == 0) { ?>
-                                        <a class="badge rounded-1 bg-success fs-10 p-1 text-decoration-none cursor"
-                                            onclick="change_status('<?= $key['order_id'] ?>','2','<?= $key['order_no'] ?>');">
-                                            <i class="bi bi-clipboard-check"></i> PROCESS AT STORE
+                                    <?php if ($key['pay_status'] == 0) { ?>
+                                        <a href="receipt_pdf.php?order_id=<?= $key['order_id'] ?>" class="badge rounded-1 bg-primary fs-10 p-1 text-decoration-none cursor" target="_blank">Receipt</a>
+                                        <a href="javascript:void(0)" class="badge rounded-1 bg-success fs-10 p-1 text-decoration-none cursor" onclick="payModal('<?= $key['order_id'] ?>','<?= $key['order_no'] ?>','<?= round($key['final_total']) ?>','<?= $key['paid_amount']; ?>');">
+                                            Settle Order
                                         </a>
-                                    <?php }
-                                    if ($key['status'] == 2) { ?>
-                                        <a class="badge rounded-1 bg-success fs-10 p-1 text-decoration-none cursor"
-                                            onclick="change_status('<?= $key['order_id'] ?>','3','<?= $key['order_no'] ?>');">
-                                            <i class="bi bi-patch-check"></i> MARK READY
-                                        </a>
-                                    <?php }
-                                    if ($key['status'] == 0 || $key['status'] >= 2) { ?>
-                                        <a class="badge rounded-1 bg-success fs-10 p-1 text-decoration-none cursor"
-                                            onclick="change_status('<?= $key['order_id'] ?>','1','<?= $key['order_no'] ?>');">
-                                            <i class="bi bi-heart-fill"></i> MARK DELIVERED
-                                        </a>
-                                    <?php }
-                                    if ($key['status'] == 0 || $key['status'] == 2 || $key['status'] == 3) { ?>
-                                        <a class="badge rounded-1 bg-success fs-10 p-1 text-decoration-none cursor"
-                                            href="new-walk-in.php?order_id=<?= $key['order_id'] ?>">
-                                            <i class="bi bi-tag-fill"></i> RE-TAG
-                                        </a>
+                                    <?php } else { ?>
+                                        <a href="bill_pdf.php?order_id=<?= $key['order_id'] ?>" class="badge rounded-1 bg-success fs-10 p-1 text-decoration-none cursor" target="_blank">Invoice</a>
                                     <?php } ?>
-                                    <span class="position-relative d-inline-block">
-                                        <a href="javascript:void(0)"
-                                            class="badge rounded-1 text-black cursor border fs-10 p-1 text-decoration-none more-btn">
-                                            <i class="bi bi-three-dots-vertical"></i> More
-                                        </a>
-                                        <ul class="moreDropdown list-unstyled shadow">
-                                            <li><a href="javascript:void(0)" onclick="rescheduleModal('<?= $key['order_id'] ?>','<?= $key['order_no'] ?>');" class="fs-6"><i class="bi bi-arrow-clockwise"></i>&nbsp;&nbsp;&nbsp;&nbsp;Reschedule</a></li>
-                                            <li><a href="bill_pdf.php?order_id=<?= $key['order_id'] ?>" class="fs-6" target="_blank"><i class="bi bi-cash"></i>&nbsp;&nbsp;&nbsp;&nbsp;Bill Receipt</a></li>
-                                            <?php if ($key['status'] == 0) { ?>
-                                                <li><a href="tag_print.php?order_id=<?= $key['order_id']; ?>" class="fs-6" target="_blank"><i class="bi bi-printer-fill"></i>&nbsp;&nbsp;&nbsp;&nbsp;Print Tag</a></li>
-                                            <?php }
-                                            if ($key['pay_status'] == 0) {  ?>
-                                                <li><a href="javascript:void(0)" class="fs-6" onclick="payModal('<?= $key['order_id'] ?>','<?= $key['order_no'] ?>','<?= round($key['final_total']) ?>','<?= $key['paid_amount']; ?>');">
-                                                        <i class="bi bi-cash-stack"></i>&nbsp;&nbsp;&nbsp;&nbsp;Settle Order
-                                                    </a>
-                                                </li>
-                                            <?php } ?>
-                                        </ul>
-                                    </span>
-
                                 </td>
-
-                                <td class="fs-12"><?= $key['order_no'] ?></td>
-                                <td class="fs-12">
-                                    <?php
-                                    if ($key['status'] == 0) {
-                                        echo '<span class="badge bg-warning text-dark">Tagged</span>';
-                                    } elseif ($key['status'] == 1) {
-                                        echo '<span class="badge bg-success">Delivered</span>';
-                                    } elseif ($key['status'] == 2) {
-                                        echo '<span class="badge bg-info text-dark">Process At Store</span>';
-                                    } elseif ($key['status'] == 3) {
-                                        echo '<span class="badge bg-primary">Ready</span>';
-                                    }
-                                    ?>
-                                </td>
-                                <td class="fs-12"><?= round($key['final_total']) - $key['paid_amount'] ?></td>
-                                <td class="fs-12"><?= round($key['final_total']) ?></td>
-                                <td class="fs-12"><?= $obj->dateformatindia($key['delivery_date']) ?></td>
-                                <td class="fs-12"><?= $key['delivery_slot'] ?></td>
-                                <td class="fs-12"><?= $key['customer_name'] ?? '' ?></td>
-                                <td class="fs-12"><?= $key['mobile'] ?? '' ?></td>
-                                <td class="fs-12"><?= $key['address'] ?? '' ?></td>
+                                <td><?= ($key['pay_status'] == 1) ? "Paid" : "Draft" ?></td>
+                                <td><?= ($key['invoice_no']) ? "INV" . $key['invoice_no'] : '-' ?></td>
+                                <td><?= $key['order_no'] ?><?php if ($key['is_express_delivery'] == 1) { ?><img src="img/fast-delivery.png" width="30" alt=""><?php } ?></td>
+                                <td><?= $key['paid_amount'] ?></td>
+                                <td><?= round($key['final_total']) - $key['paid_amount'] ?></td>
+                                <td><?= round($key['final_total']) ?></td>
+                                <td><?= number_format($key['tax_amt'], 2) ?></td>
+                                <td><?= number_format($key['taxable_amt'], 2) ?></td>
+                                <td><?= $key['express_amount'] ?></td>
+                                <td><?= $key['discount_amt']  ?></td>
+                                <td><?= round($key['final_total']) ?></td>
                             </tr>
                         <?php } ?>
                     </tbody>
@@ -263,117 +230,6 @@ if (isset($_GET['status'])) {
             </div>
         </div>
     </div>
-
-    <!-- Schedule Modal -->
-    <div class="modal fade" id="reschedule" data-bs-backdrop="static" tabindex="-1" aria-labelledby="rescheduleLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content border-0 shadow">
-
-                <!-- HEADER -->
-                <div class="modal-header bg-light">
-                    <div>
-                        <h5 class="modal-title fw-semibold mb-0" id="rescheduleLabel">
-                            Reschedule Order
-                        </h5>
-                        <small class="text-muted">Order No: <span class="fw-semibold" id="rescheduleOrder">170288</span></small>
-                    </div>
-
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-
-                <!-- BODY -->
-                <div class="modal-body">
-                    <!-- Form Section -->
-                    <div class="card border-0 bg-light">
-                        <div class="card-body">
-                            <div class="row g-3 align-items-end">
-
-                                <div class="col-lg-4 col-md-6">
-                                    <label for="delivery_date" class="form-label fw-semibold mb-1">Delivery Date</label>
-                                    <select id="delivery_date" class="form-select">
-                                        <option value="">Select Date</option>
-                                    </select>
-                                </div>
-
-                                <div class="col-lg-4 col-md-6">
-                                    <label for="delivery_slot" class="form-label fw-semibold mb-1">Time Slot</label>
-                                    <select id="delivery_slot" class="form-select">
-                                        <option value="">Select Time Slot</option>
-                                        <option>7 AM - 8 AM</option>
-                                        <option>8 AM - 9 AM</option>
-                                        <option>9 AM - 10 AM</option>
-                                        <option>10 AM - 11 AM</option>
-                                        <option>11 AM - 12 PM</option>
-                                        <option>12 PM - 1 PM</option>
-                                        <option>1 PM - 2 PM</option>
-                                        <option>2 PM - 3 PM</option>
-                                        <option>3 PM - 4 PM</option>
-                                        <option>4 PM - 5 PM</option>
-                                        <option>5 PM - 6 PM</option>
-                                        <option>6 PM - 7 PM</option>
-                                        <option>7 PM - 8 PM</option>
-                                        <option>8 PM - 9 PM</option>
-                                        <option>9 PM - 10 PM</option>
-                                    </select>
-                                </div>
-
-                                <div class="col-lg-4 col-md-12">
-                                    <label for="reason" class="form-label fw-semibold mb-1">Reason</label>
-                                    <select id="reason" class="form-select">
-                                        <option value="Call Not Answered">Call Not Answered</option>
-                                        <option value="Call Not Connecting">Call Not Connecting</option>
-                                        <option value="Requested By Customer" selected>Requested By Customer</option>
-                                        <option value="Customer Not Avaliable At Location">Customer Not Available At Location</option>
-                                        <option value="Rider Not Avaliable">Rider Not Available</option>
-                                        <option value="Clothes Not Ready">Clothes Not Ready</option>
-                                        <option value="Other">Other</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- History Section -->
-                    <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
-                        <h6 class="fw-semibold mb-0">Reschedule History</h6>
-                        <span class="badge bg-secondary-subtle text-dark border">Latest updates shown below</span>
-                    </div>
-
-                    <div class="table-responsive border rounded">
-                        <table class="table table-hover">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>S.No.</th>
-                                    <th>Date</th>
-                                    <th>Time Slot</th>
-                                    <th>Reason</th>
-                                </tr>
-                            </thead>
-                            <tbody id="reschedule_data">
-
-                            </tbody>
-                        </table>
-                    </div>
-
-                </div>
-
-                <!-- FOOTER -->
-                <div class="modal-footer bg-white">
-                    <input type="hidden" id="order_id_m">
-
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                        Cancel
-                    </button>
-
-                    <button type="button" class="btn btn-primary px-4" onclick="add_reschedule();">
-                        Reschedule
-                    </button>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
 
     <!-- Settel Modal -->
     <div class="modal fade" id="settle" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="settleLabel" aria-hidden="true">
@@ -463,7 +319,6 @@ if (isset($_GET['status'])) {
             </div>
         </div>
     </div>
-
 </body>
 <?php include('inc/js-link.php') ?>
 <script>
@@ -472,34 +327,6 @@ if (isset($_GET['status'])) {
         $(".chosen-select").select2({
             width: '100%'
         });
-    });
-    let activeBtn = null;
-
-    document.querySelectorAll('.more-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.stopPropagation();
-
-            const dropdown = this.nextElementSibling;
-            const rect = this.getBoundingClientRect();
-
-            // Close all other dropdowns
-            document.querySelectorAll('.moreDropdown').forEach(d => {
-                if (d !== dropdown) d.style.display = 'none';
-            });
-
-            dropdown.style.top = (rect.bottom + window.scrollY + 4) + 'px';
-            dropdown.style.left = (rect.left + window.scrollX) + 'px';
-
-            // Toggle show/hide
-            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
-
-            activeBtn = this;
-        });
-    });
-
-    // Outside click close
-    document.addEventListener('click', function() {
-        document.querySelectorAll('.moreDropdown').forEach(d => d.style.display = 'none');
     });
 
     $(document).on('click', '#paymentTab button', function() {
@@ -627,125 +454,6 @@ if (isset($_GET['status'])) {
             }
         });
 
-    }
-
-
-
-    function rescheduleModal(order_id, order_no) {
-        $('#reschedule').modal("show");
-        $('#order_id_m').val(order_id);
-        $('#rescheduleOrder').html(order_no);
-        show_data(order_id);
-    }
-
-    function show_data(order_id) {
-        $.ajax({
-            type: "POST",
-            url: "ajax_fetch_reschedule.php",
-            data: {
-                order_id: order_id
-            },
-            success: function(data) {
-                $('#reschedule_data').html(data);
-            }
-        });
-
-    }
-
-    function add_reschedule() {
-        let delivery_date = document.getElementById('delivery_date').value;
-        let delivery_slot = document.getElementById('delivery_slot').value;
-        let reason = document.getElementById('reason').value;
-        let order_id = document.getElementById('order_id_m').value;
-
-        if (delivery_date == '') {
-            alert("Select a Date for Reschedule");
-            return false;
-        }
-
-        if (delivery_slot == '') {
-            alert("Select a Timeslot for Reschedule");
-            return false;
-        }
-        if (reason == '') {
-            alert("Select a reason for Reschedule");
-            return false;
-        }
-
-        $.ajax({
-            type: "POST",
-            url: "ajax_add_reschedule.php",
-            data: {
-                order_id: order_id,
-                delivery_date: delivery_date,
-                delivery_slot: delivery_slot,
-                reason: reason
-            },
-            success: function(res) {
-                location.reload();
-            }
-        });
-    }
-
-    function change_status(order_id, status, order_no) {
-        const statusdisp = (status == 2) ? "PROCESS AT STORE" : ((status == 3) ? "MARK AS READY" : "MARK AS DELIVERED");
-        Swal.fire({
-            title: statusdisp,
-            text: "Change for Order " + order_no + " ?",
-            icon: "question",
-            showCancelButton: true,
-            confirmButtonText: "Yes"
-        }).then((result) => {
-
-            if (!result.isConfirmed) return;
-
-            $.ajax({
-                type: "POST",
-                url: "ajax_change_status.php",
-                data: {
-                    order_id: order_id,
-                    status: status
-                },
-                success: function(res) {
-                    res = res.trim();
-
-                    if (res === "success") {
-                        Swal.fire("Updated!", "Order status updated.", "success");
-                        location.reload();
-                    } else {
-                        Swal.fire("Error", res, "error");
-                    }
-                }
-            });
-
-        });
-    }
-
-    const select = document.getElementById("delivery_date");
-
-    const formatDate = (date) => {
-        const y = date.getFullYear();
-        const m = String(date.getMonth() + 1).padStart(2, "0");
-        const d = String(date.getDate()).padStart(2, "0");
-        return `${y}-${m}-${d}`;
-    };
-
-    const today = new Date();
-
-    for (let i = 0; i < 10; i++) {
-        const dt = new Date(today);
-        dt.setDate(today.getDate() + i);
-
-        const value = formatDate(dt);
-
-        const opt = document.createElement("option");
-        opt.value = value;
-        opt.textContent = value;
-
-        // auto-select today
-        if (i === 0) opt.selected = true;
-
-        select.appendChild(opt);
     }
 </script>
 

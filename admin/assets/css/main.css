@@ -54,6 +54,13 @@
   font-size: 13px;
 }
 
+.red {
+  background-color: red !important;
+  color: white !important;
+  font-weight: 500;
+  font-size: 13px;
+}
+
 .purple {
   background-color: purple !important;
   color: white !important;
@@ -90,6 +97,7 @@
 .fs-11 {
   font-size: 11px !important;
 }
+
 .fs-10 {
   font-size: 10px !important;
 }
@@ -294,24 +302,48 @@ td {
   padding: 3px 3px !important;
 }
 
-
 /* tab style  */
 .product_search_list li:not(:first-child) {
-    margin-left: 4px; /* adjust as needed */
+  margin-left: 4px;
+  /* adjust as needed */
 }
 
 .product_search_list li a {
-    font-size: 10px;
-    background-color: #ced4da;
-    color: black;
-    border-radius: 1px;
+  font-size: 10px;
+  background-color: #ced4da;
+  color: black;
+  border-radius: 1px;
 }
+
 .product_search_list li a:hover {
-    color: rgb(3, 69, 3);
-    background-color: rgba(77, 241, 77, 0.363);
+  color: rgb(3, 69, 3);
+  background-color: rgba(77, 241, 77, 0.363);
 }
-.nav-pills .nav-link.active, .nav-pills .show > .nav-link,
+
+.nav-pills .nav-link.active,
+.nav-pills .show>.nav-link,
 .product_search_list li a:active {
-    color: white;
-    background-color: #198754 !important;
+  color: white;
+  background-color: #198754 !important;
+}
+
+.pagination a.page-link {
+  padding: 2px 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.active>.page-link,
+.page-link.active {
+  background-color: #198754;
+  border-color: #198754;
+}
+
+div#example_info {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.bg-li-menu {
+  background: #125d8d !important;
 }

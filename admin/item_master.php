@@ -2,22 +2,11 @@
 include("../adminsession.php");
 $pagename = 'item_master.php';
 $title = "Item Master";
-
 $module = "Item Master";
-
 $submodule = "Item Master";
-
 $btn_name = "Save";
-
-$keyvalue = 0;
-
 $tblname = "item_master";
-
 $tblpkey = "item_id";
-$ipaddress = $obj->get_client_ip();
-// $sessionid = $obj->getvalfield("m_session", "sessionid", "status=1");
-$sessionid = 1;
-$createdate = date('Y-m-d H:i:s');
 
 if (isset($_GET['item_id']))
     $keyvalue = $_GET['item_id'];
@@ -34,6 +23,7 @@ if (isset($_POST['submit'])) {
     $keyvalue = $obj->test_input($_POST['item_id']);
     $item_name = $obj->test_input($_POST['item_name']);
     $item_in = $obj->test_input($_POST['item_in']);
+    $hsncode = $obj->test_input($_POST['hsncode']);
     $count = $obj->getvalfield("$tblname", "count(*)", "item_name='$item_name' and item_id!='$keyvalue'");
     if ($count > 0) {
         $action = 4;
@@ -41,7 +31,7 @@ if (isset($_POST['submit'])) {
     } else {
         if ($keyvalue == 0) {
 
-            $form_data = array('item_name' => $item_name, 'item_in' => $item_in, 'ipaddress' => $ipaddress, 'createdate' => $createdate, 'createdby' => $loginid);
+            $form_data = array('item_name' => $item_name, 'item_in' => $item_in, 'hsncode' => $hsncode, 'ipaddress' => $ipaddress, 'createdate' => $createdate, 'createdby' => $loginid);
             $lastid = $obj->insert_record($tblname, $form_data);
             $action = 1;
 
@@ -50,7 +40,7 @@ if (isset($_POST['submit'])) {
 
             //update
 
-            $form_data = array('item_name' => $item_name, 'item_in' => $item_in, 'ipaddress' => $ipaddress, 'lastupdated' => $createdate);
+            $form_data = array('item_name' => $item_name, 'item_in' => $item_in, 'hsncode' => $hsncode, 'ipaddress' => $ipaddress, 'lastupdated' => $createdate);
 
             $where = array($tblpkey => $keyvalue);
 
@@ -75,9 +65,11 @@ if (isset($_GET[$tblpkey])) {
     $sqledit = $obj->select_record($tblname, $where);
     $item_name = $sqledit['item_name'];
     $item_in = $sqledit['item_in'];
+    $hsncode = $sqledit['hsncode'];
 } else {
     $item_in = "0";
     $item_name = "";
+    $hsncode = "";
 }
 
 if (isset($_POST['ajitem_id'])) {
@@ -166,6 +158,10 @@ if (isset($_POST['ajitem_id'])) {
                                 <input type="text" name="item_name" id="item_name" class="form-control" placeholder="Enter Item" value="<?php echo $item_name ?>">
                             </div>
                             <div class="col-lg-3">
+                                <label for="" class="fw-bold">HSN Code <span class="text-danger fw-bold">*</span></label>
+                                <input type="text" name="hsncode" id="hsncode" class="form-control" placeholder="Enter HSN Code" value="<?php echo $hsncode ?>">
+                            </div>
+                            <div class="col-lg-3">
                                 <label class="fw-bold">Item In</label><br>
                                 <label class="me-3">
                                     <input type="radio"
@@ -204,6 +200,7 @@ if (isset($_POST['ajitem_id'])) {
                                 <tr>
                                     <th>Sno.</th>
                                     <th>Item Name</th>
+                                    <th>HSN Code</th>
                                     <th>Item In</th>
                                     <th>Action</th>
                                 </tr>
@@ -217,6 +214,7 @@ if (isset($_POST['ajitem_id'])) {
                                     <tr>
                                         <td><?php echo $i++; ?></td>
                                         <td><?php echo $key['item_name']; ?></td>
+                                        <td><?php echo $key['hsncode']; ?></td>
                                         <td><?php echo ($key['item_in'] == 1) ? "Pair" : "Piece"; ?></td>
                                         <td>
                                             <a href="<?php echo $pagename . "?" . $tblpkey . "=" . $key['item_id']; ?>" class="btn btn-outline-success"><i class="bi bi-pencil-fill"></i></a>

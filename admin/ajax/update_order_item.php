@@ -4,7 +4,7 @@ include_once("../../adminsession.php");
 $order_item_id = (int)($_POST['order_item_id'] ?? 0);
 $data = $_POST['data'] ?? [];
 $item_type_master_id = (int)$data['item_type_master_id'];
-$qty = max(1, (int)$data['qty']);
+$qty = isset($data['qty']) ? (float)$data['qty'] : 0;
 $areas = $data['areas'] ?? [];
 $services = [];
 $service_total = 0;
@@ -45,7 +45,13 @@ $selection = [
 ];
 
 $total_amount = $service_total + $requirement_total;
-$updated = $obj->update_record(
+$gst_percent     = 18;
+$taxable_amount  = round(($total_amount * 100) / (100 + $gst_percent), 2);
+$gst_amount      = round($total_amount - $taxable_amount, 2);
+$cgst_amount = round($gst_amount / 2, 2);
+$sgst_amount = round($gst_amount / 2, 2);
+
+$obj->update_record(
     "order_item",
     ["order_item_id" => $order_item_id],
     [
@@ -54,6 +60,11 @@ $updated = $obj->update_record(
         "selection_json"      => json_encode($selection, JSON_UNESCAPED_UNICODE),
         "service_total"       => $service_total,
         "requirement_total"   => $requirement_total,
+        "taxable_amount"      => $taxable_amount,
+        "cgst_amount"     => $cgst_amount,
+        "sgst_amount"     => $sgst_amount,
+        "gst_amount"          => $gst_amount,
+        "gst_percent"         => $gst_percent,
         "total_amount"        => $total_amount,
         "is_washing"          => $is_washing,
         "is_pressing"         => $is_pressing,

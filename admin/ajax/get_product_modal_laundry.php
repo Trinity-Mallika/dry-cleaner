@@ -35,8 +35,7 @@ $selectedCommentIds = $comments ?? [];
     <a href="#"
         role="button"
         aria-label="Close"
-        onclick="this.blur()"
-        data-bs-dismiss="modal">
+        onclick="close_laundry_modal();">
         <i class="bi bi-x fs-3 text-black"></i>
     </a>
 
@@ -116,7 +115,7 @@ $selectedCommentIds = $comments ?? [];
         id="addItemBtn1"
         class="btn btn-success w-75"
         onclick="<?= $mode === 'edit'
-                        ? "handleLaundryUpdate($order_item_laundry_id)"
+                        ? "handleLaundryUpdate($order_item_laundry_id,'$mode')"
                         : "saveItemDetailsLaundry($item_id)" ?>">
         <?= $mode === 'edit' ? 'UPDATE' : 'ADD' ?>
     </a>

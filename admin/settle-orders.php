@@ -101,6 +101,11 @@ if (isset($_GET['status'])) {
         border-radius: var(--bs-nav-pills-border-radius);
         padding: 4px 17px;
     }
+
+    .btn.active {
+        background-color: #c1f1c1;
+        border-color: #bde5bd;
+    }
 </style>
 
 <body>
@@ -151,19 +156,19 @@ if (isset($_GET['status'])) {
             </div>
 
             <div class="table-responsive mt-4">
-                <table id="example" class="table table-hover align-middle mb-0">
+                <table id="example1" class="table table-hover align-middle mb-0">
                     <thead class="table-light text-nowrap">
                         <tr>
-                            <td class="fw-semibold fs-14">Actions</td>
-                            <td class="fw-semibold fs-14">Order No.</td>
-                            <td class="fw-semibold fs-14">Order Status</td>
-                            <td class="fw-semibold fs-14">Due Amount</td>
-                            <td class="fw-semibold fs-14">Invoice Amount</td>
-                            <td class="fw-semibold fs-14">Delivery Date</td>
-                            <td class="fw-semibold fs-14">Delivery Timeslot</td>
-                            <td class="fw-semibold fs-14">Customer Name</td>
-                            <td class="fw-semibold fs-14">Customer Mobile</td>
-                            <td class="fw-semibold fs-14">Customer Address</td>
+                            <td class="fw-semibold">Actions</td>
+                            <td class="fw-semibold">Order No.</td>
+                            <td class="fw-semibold">Order Status</td>
+                            <td class="fw-semibold">Due Amount</td>
+                            <td class="fw-semibold">Invoice Amount</td>
+                            <td class="fw-semibold">Delivery Date</td>
+                            <td class="fw-semibold">Delivery Timeslot</td>
+                            <td class="fw-semibold">Customer Name</td>
+                            <td class="fw-semibold">Customer Mobile</td>
+                            <td class="fw-semibold">Customer Address</td>
                         </tr>
                     </thead>
                     <tbody class="text-nowrap">
@@ -196,7 +201,7 @@ if (isset($_GET['status'])) {
                                     <?php }
                                     if ($key['status'] == 2) { ?>
                                         <a class="badge rounded-1 bg-success fs-10 p-1 text-decoration-none cursor"
-                                            onclick="change_status('<?= $key['order_id'] ?>','3','<?= $key['order_no'] ?>');">
+                                            onclick="set_storage('<?= $key['order_id'] ?>','<?= $key['order_no'] ?>');">
                                             <i class="bi bi-patch-check"></i> MARK READY
                                         </a>
                                     <?php }
@@ -210,6 +215,11 @@ if (isset($_GET['status'])) {
                                         <a class="badge rounded-1 bg-success fs-10 p-1 text-decoration-none cursor"
                                             href="new-walk-in.php?order_id=<?= $key['order_id'] ?>">
                                             <i class="bi bi-tag-fill"></i> RE-TAG
+                                        </a>
+                                    <?php }
+                                    if (($key['status'] == 3 || $key['status'] == 1) && $key['pay_status'] == 0) { ?>
+                                        <a class="badge rounded-1 bg-success fs-10 p-1 text-decoration-none cursor" onclick="payModal('<?= $key['order_id'] ?>','<?= $key['order_no'] ?>','<?= round($key['final_total']) ?>','<?= $key['paid_amount']; ?>');">
+                                            <i class="bi bi-cash-stack"></i> PENDING PAYMENT
                                         </a>
                                     <?php } ?>
                                     <span class="position-relative d-inline-block">
@@ -234,8 +244,8 @@ if (isset($_GET['status'])) {
 
                                 </td>
 
-                                <td class="fs-12"><?= $key['order_no'] ?></td>
-                                <td class="fs-12">
+                                <td><?= $key['order_no'] ?><?php if ($key['is_express_delivery'] == 1) { ?><img src="img/fast-delivery.png" width="30" alt=""><?php } ?></td>
+                                <td>
                                     <?php
                                     if ($key['status'] == 0) {
                                         echo '<span class="badge bg-warning text-dark">Tagged</span>';
@@ -248,13 +258,13 @@ if (isset($_GET['status'])) {
                                     }
                                     ?>
                                 </td>
-                                <td class="fs-12"><?= round($key['final_total']) - $key['paid_amount'] ?></td>
-                                <td class="fs-12"><?= round($key['final_total']) ?></td>
-                                <td class="fs-12"><?= $obj->dateformatindia($key['delivery_date']) ?></td>
-                                <td class="fs-12"><?= $key['delivery_slot'] ?></td>
-                                <td class="fs-12"><?= $key['customer_name'] ?? '' ?></td>
-                                <td class="fs-12"><?= $key['mobile'] ?? '' ?></td>
-                                <td class="fs-12"><?= $key['address'] ?? '' ?></td>
+                                <td><?= round($key['final_total']) - $key['paid_amount'] ?></td>
+                                <td><?= round($key['final_total']) ?></td>
+                                <td><?= $obj->dateformatindia($key['delivery_date']) ?></td>
+                                <td><?= $key['delivery_slot'] ?></td>
+                                <td><?= $key['customer_name'] ?? '' ?></td>
+                                <td><?= $key['mobile'] ?? '' ?></td>
+                                <td><?= $key['address'] ?? '' ?></td>
                             </tr>
                         <?php } ?>
                     </tbody>
@@ -463,12 +473,53 @@ if (isset($_GET['status'])) {
             </div>
         </div>
     </div>
+    <!-- check-detail Modal Start-->
+    <div class="modal fade custom-modal" id="check-detail" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="p-3 pb-0">
+                    <h6 class="modal-title">Mark Ready</h6>
+                    <small id="order_head"> Orders: 1690279</small>
+                </div>
+                <div class="modal-body">
+                    <h6 class="fw-normal text-secondary">Select Storage Label</h6>
 
+                    <div class="container py-3">
+
+                        <!-- Tabs -->
+                        <ul class="nav flex-wrap gap-2 border-0" id="numberTabs" role="tablist">
+                            <?php for ($i = 1; $i < 47; $i++) { ?>
+                                <li class="nav-item" role="presentation">
+                                    <button
+                                        type="button"
+                                        class="btn rounded-circle number-pill storage-btn <?php echo ($i == 1 ? 'active' : ''); ?>"
+                                        data-storage="<?php echo $i; ?>">
+                                        <?php echo $i; ?>
+                                    </button>
+                                </li>
+                            <?php } ?>
+                        </ul>
+                        <input type="hidden" id="order_id_storage">
+                        <input type="hidden" id="storage_label">
+
+                    </div>
+                    <div class="modal-footer border-top-0 p-0">
+                        <a class="btn btn-success btn-sm cursor ms-2" onclick="save_storage();">Mark As Ready</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- check-detail Modal ENd-->
 </body>
 <?php include('inc/js-link.php') ?>
 <script>
     $(document).ready(function() {
-        $('#example').DataTable();
+        $('#example').DataTable({
+            order: [
+                [2, 'desc']
+            ]
+        });
         $(".chosen-select").select2({
             width: '100%'
         });
@@ -505,6 +556,71 @@ if (isset($_GET['status'])) {
     $(document).on('click', '#paymentTab button', function() {
         $('#payment_mode').val($(this).data('mode'));
     });
+
+    $(document).on("click", ".storage-btn", function() {
+
+        $(".storage-btn").removeClass("active")
+            .addClass("btn-light");
+
+        $(this).addClass("active")
+            .removeClass("btn-light");
+
+        $("#storage_label").val($(this).data("storage"));
+    });
+
+    function set_storage(order_id, order_no, storage) {
+
+        $("#order_id_storage").val(order_id);
+        $("#order_head").text("Orders: " + order_no);
+
+        $(".storage-btn")
+            .removeClass("active")
+            .addClass("btn-light");
+
+        let selectedStorage;
+
+        if (storage && storage != 0) {
+            selectedStorage = storage;
+        } else {
+            selectedStorage = 1;
+        }
+
+        let btn = $('.storage-btn[data-storage="' + selectedStorage + '"]');
+
+        btn.removeClass("btn-light")
+            .addClass("active");
+
+        $("#storage_label").val(selectedStorage);
+
+        $("#check-detail").modal("show");
+    }
+
+
+
+    function save_storage() {
+
+        let order_id = $("#order_id_storage").val();
+        let storage_label = $("#storage_label").val();
+
+        if (!storage_label) {
+            alert("Please select storage label");
+            return;
+        }
+
+        $.ajax({
+            url: "ajax/save_storage.php",
+            type: "POST",
+            data: {
+                order_id: order_id,
+                storage_label: storage_label
+            },
+            success: function(res) {
+                $("#check-detail").modal("hide");
+                location.reload();
+            }
+        });
+    }
+
 
 
     function payModal(order_id, order_no, final_total, paid_amount) {

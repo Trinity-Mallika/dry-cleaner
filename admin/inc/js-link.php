@@ -92,4 +92,31 @@
         });
 
     });
+
+    var dtBaseConfig = {
+        dom: 'lBfrtip',
+        buttons: [{
+                extend: 'excel',
+                orientation: 'landscape',
+                pageSize: 'LEGAL',
+                footer: true
+            },
+            {
+                extend: 'print',
+                orientation: 'landscape',
+                pageSize: 'LEGAL',
+                footer: true
+            },
+            {
+                extend: 'pdf',
+                orientation: 'landscape',
+                pageSize: 'LEGAL',
+                footer: true
+            }
+        ],
+        lengthMenu: [
+            [10, 25, 50, 100],
+            [10, 25, 50, 100]
+        ]
+    };
 </script>
